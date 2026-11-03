@@ -2,5 +2,5 @@
 name = "untitled"
 compatibility_date = "2026-11-03"
 
-[site]
-bucket = "."
+[assets]
+directory = "."
