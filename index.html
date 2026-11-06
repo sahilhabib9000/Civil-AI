@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -162,7 +162,7 @@ function ccCalculate()  {
     
     // Splitting the Ratio input (e.g., 1,2,4)
     const ratioInput = document.getElementById("cc-ratio").value;
-    const ratio = ratioInput.split(",").map(Number);
+    const ratio = ratioInput.split(/[:,]/).map(Number);
 
     const resultDiv = document.getElementById("cc-result");
 
