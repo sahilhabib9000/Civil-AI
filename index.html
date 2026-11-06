@@ -152,7 +152,58 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 </section>
 
 <script>
-function ccCalculate() {
+function ccCalculate()  {
+    // 1. Fetching input values
+    const length = Number(document.getElementById("cc-length").value);
+    const width = Number(document.getElementById("cc-width").value);
+    const height = Number(document.getElementById("cc-height").value);
+    const unit = document.getElementById("cc-unit").value;
+    const factor = Number(document.getElementById("cc-factor").value) || 1.54; // Dry volume factor (Default 1.54)
+    
+    // Splitting the Ratio input (e.g., 1,2,4)
+    const ratioInput = document.getElementById("cc-ratio").value;
+    const ratio = ratioInput.split(",").map(Number);
+
+    const resultDiv = document.getElementById("cc-result");
+
+    // 2. Input Validation
+    if (!length || !width || !height || ratio.length !== 3 || ratio.some(isNaN)) {
+        resultDiv.innerHTML = "<p style='color: red;'>Please enter valid length, width, height, and a proper ratio format (e.g., 1,2,4).</p>";
+        return;
+    }
+
+    // 3. Calculate Wet Volume
+    let wetVolume = length * width * height;
+
+    // 4. Calculate Dry Volume
+    let dryVolume = wetVolume * factor;
+
+    // 5. Sum of Ratios
+    const totalRatio = ratio[0] + ratio[1] + ratio[2];
+
+    // 6. Calculate Material Volumes
+    let cementVolume = (dryVolume * ratio[0]) / totalRatio;
+    let sandVolume = (dryVolume * ratio[1]) / totalRatio;
+    let aggregateVolume = (dryVolume * ratio[2]) / totalRatio;
+
+    // Convert cement volume to bags (1 Bag of Cement = 1.25 CFT)
+    let cementBags = cementVolume / 1.25; 
+
+    // 7. Output Results to the UI
+    resultDiv.innerHTML = `
+        <div style="background: #f4f4f4; padding: 15px; border-radius: 5px; margin-top: 15px;">
+            <h3>📊 Calculation Results:</h3>
+            <p><strong>Total Work Volume (Wet Volume):</strong> ${wetVolume.toFixed(2)} ${unit === 'm' ? 'm³' : 'CFT'}</p>
+            <p><strong>Dry Volume (with Factor):</strong> ${dryVolume.toFixed(2)} ${unit === 'm' ? 'm³' : 'CFT'}</p>
+            <hr>
+            <p><strong>🧱 Required Cement:</strong> ${cementBags.toFixed(1)} Bags (${cementVolume.toFixed(2)} CFT)</p>
+            <p><strong>⏳ Required Sand:</strong> ${sandVolume.toFixed(2)} ${unit === 'm' ? 'm³' : 'CFT'}</p>
+            <p><strong>🪨 Required Aggregate:</strong> ${aggregateVolume.toFixed(2)} ${unit === 'm' ? 'm³' : 'CFT'}</p>
+        </div>
+    `;
+}
+
+
   const length = Number(document.getElementById("cc-length").value);
   const width = Number(document.getElementById("cc-width").value);
   const height = Number(document.getElementById("cc-height").value);
