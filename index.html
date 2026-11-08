@@ -325,50 +325,45 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 
 
 
-<script>
+  <script>
 function steelCalculate() {
-  const diameter = Number(document.getElementById("steelDiameter").value);
-  const length = Number(document.getElementById("steelLength").value);
-  const unit = document.getElementById("steelUnit").value;
-  const bars = Number(document.getElementById("steelBars").value);
+    // Get values from input fields
+    const diameter = Number(document.getElementById("steelDiameter").value);
+    const length = Number(document.getElementById("steelLength").value);
+    const unit = document.getElementById("steelUnit").value;
+    const bars = Number(document.getElementById("steelBars").value);
 
-  const error = document.getElementById("steelError");
-  const result = document.getElementById("steelResult");
-  const output = document.getElementById("steelOutput");
+    // Get result displays elements
+    const error = document.getElementById("steelError");
+    const result = document.getElementById("steelResult");
+    const output = document.getElementById("steelOutput");
 
-  error.textContent = "";
-  result.style.display = "none";
+    // Clear previous error and results
+    error.textContent = "";
+    output.textContent = "";
+    result.style.display = "none"; 
 
-  if (!Number.isFinite(length) || length <= 0 ||
-      !Number.isInteger(bars) || bars <= 0) {
-    error.textContent = "Please enter a valid positive length and whole number of bars.";
-    return;
-  }
+    // Check if inputs are valid positive numbers
+    if (!diameter || diameter <= 0 || !length || length <= 0 || !bars || bars <= 0) {
+        error.textContent = "Please enter valid positive numbers in all fields.";
+        return;
+    }
 
-  // Convert feet to metres when required
-  const lengthMetres = unit === "ft" ? length * 0.3048 : length;
+    // Convert length to metres if unit is Feet (ft)
+    const lengthMetres = unit === "ft" ? length * 0.3048 : length;
 
-  // Approximate nominal steel weight formula
-  const weightPerMetre = (diameter * diameter) / 162;
+    // Formula: (D^2 / 162.2) * length * total number of bars
+    const totalWeight = ((diameter * diameter) / 162.198) * lengthMetres * bars;
 
-  const weightPerBar = weightPerMetre * lengthMetres;
-  const totalLength = lengthMetres * bars;
-  const totalWeight = weightPerBar * bars;
-  const totalTonnes = totalWeight / 1000;
+    // Make the result block visible
+    result.style.display = "block";
 
-  output.innerHTML =
-    "<p><strong>Bar Diameter:</strong> " + diameter + " mm</p>" +
-    "<p><strong>Length of One Bar:</strong> " + lengthMetres.toFixed(3) + " m</p>" +
-    "<p><strong>Number of Bars:</strong> " + bars + "</p>" +
-    "<p><strong>Total Length:</strong> " + totalLength.toFixed(3) + " m</p>" +
-    "<p><strong>Weight per Metre:</strong> " + weightPerMetre.toFixed(3) + " kg</p>" +
-    "<p><strong>Weight per Bar:</strong> " + weightPerBar.toFixed(3) + " kg</p>" +
-    "<h3>Total Steel Weight: " + totalWeight.toFixed(3) + " kg</h3>" +
-    "<h3>Total Weight: " + totalTonnes.toFixed(4) + " tonne</h3>";
-
-  result.style.display = "block";
+    // Display the final weight rounded to 2 decimal places
+    output.innerHTML = `Total Weight: <span style="color: #4ade80;">${totalWeight.toFixed(2)} Kg</span>`;
 }
 </script>
+
+
 
 </body>
 </html>
