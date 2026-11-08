@@ -278,36 +278,53 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 
   <label for="steelDiameter">Bar Diameter (mm)</label>
   <select id="steelDiameter">
-    <option value="8">8 mm</option>
-    <option value="10">10 mm</option>
-    <option value="12" selected>12 mm</option>
-    <option value="16">16 mm</option>
-    <option value="20">20 mm</option>
-    <option value="25">25 mm</option>
-    <option value="32">32 mm</option>
-  </select>
+    <!-- START STEEL CALCULATOR CARD -->
+<section class="calculator-card" style="margin-top: 30px; background: #1a1a1a; padding: 25px; border-radius: 8px; color: white;">
+    <h2 style="text-align: center; color: #0284c7; margin-bottom: 20px;">CIVIL AI Steel Weight Calculator</h2>
+    
+    <div style="margin-bottom: 15px;">
+        <label for="steelDiameter" style="display: block; margin-bottom: 5px;">Steel Diameter</label>
+        <select id="steelDiameter" style="width: 100%; padding: 10px; border-radius: 4px; background: #333; color: white; border: 1px solid #444;">
+            <option value="8">8 mm</option>
+            <option value="10">10 mm</option>
+            <option value="12" selected>12 mm</option>
+            <option value="16">16 mm</option>
+            <option value="20">20 mm</option>
+            <option value="25">25 mm</option>
+            <option value="32">32 mm</option>
+        </select>
+    </div>
 
-  <label for="steelLength">Length of One Bar</label>
-  <input type="number" id="steelLength" min="0.001" step="any" placeholder="Enter length">
+    <div style="margin-bottom: 15px;">
+        <label for="steelLength" style="display: block; margin-bottom: 5px;">Length of One Bar</label>
+        <input type="number" id="steelLength" min="0.001" step="any" placeholder="Enter length" style="width: 100%; padding: 10px; border-radius: 4px; background: #333; color: white; border: 1px solid #444;">
+    </div>
 
-  <label for="steelUnit">Length Unit</label>
-  <select id="steelUnit">
-    <option value="m">Metre (m)</option>
-    <option value="ft">Feet (ft)</option>
-  </select>
+    <div style="margin-bottom: 15px;">
+        <label for="steelUnit" style="display: block; margin-bottom: 5px;">Length Unit</label>
+        <select id="steelUnit" style="width: 100%; padding: 10px; border-radius: 4px; background: #333; color: white; border: 1px solid #444;">
+            <option value="m">Metre (m)</option>
+            <option value="ft">Feet (ft)</option>
+        </select>
+    </div>
 
-  <label for="steelBars">Number of Bars</label>
-  <input type="number" id="steelBars" min="1" step="1" placeholder="Enter number of bars">
+    <div style="margin-bottom: 20px;">
+        <label for="steelBars" style="display: block; margin-bottom: 5px;">Number of Bars</label>
+        <input type="number" id="steelBars" min="1" step="1" placeholder="Enter number of bars" style="width: 100%; padding: 10px; border-radius: 4px; background: #333; color: white; border: 1px solid #444;">
+    </div>
 
-  <button type="button" onclick="steelCalculate()">Calculate Steel Weight</button>
+    <button type="button" onclick="steelCalculate()" style="width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Calculate Steel Weight</button>
 
-  <div id="steelError" role="alert"></div>
+    <div id="steelError" role="alert" style="color: #ef4444; margin-top: 15px; text-align: center;"></div>
 
-  <div id="steelResult" aria-live="polite">
-    <h3>Calculation Result</h3>
-    <div id="steelOutput"></div>
-  </div>
+    <div id="steelResult" aria-live="polite" style="margin-top: 20px; display: none; background: #262626; padding: 15px; border-radius: 6px;">
+        <h3 style="color: #0284c7; margin-top: 0;">Calculation Result</h3>
+        <div id="steelOutput"></div>
+    </div>
 </section>
+<!-- END STEEL CALCULATOR CARD →
+
+
 
 <script>
 function steelCalculate() {
