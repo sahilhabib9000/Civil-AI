@@ -1,4 +1,4 @@
-=<!DOCTYPE html>
+f=<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -203,6 +203,156 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 
 </script>
 <!-- END CIVIL AI CONCRETE CALCULATOR -->
+
+<style>
+.steel-calculator {
+  max-width: 650px;
+  margin: 35px auto;
+  padding: 25px;
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+  font-family: Arial, sans-serif;
+}
+.steel-calculator h2 {
+  text-align: center;
+  color: #087f5b;
+  margin-bottom: 10px;
+}
+.steel-calculator p {
+  text-align: center;
+  color: #64748b;
+}
+.steel-calculator label {
+  display: block;
+  margin-top: 16px;
+  font-weight: bold;
+}
+.steel-calculator input,
+.steel-calculator select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  margin-top: 7px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 16px;
+}
+.steel-calculator button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 22px;
+  background: #087f5b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.steel-calculator button:hover {
+  background: #066647;
+}
+#steelResult {
+  display: none;
+  margin-top: 22px;
+  padding: 16px;
+  background: #ecfdf5;
+  border-radius: 8px;
+  line-height: 1.9;
+}
+#steelResult h3 {
+  color: #087f5b;
+}
+#steelError {
+  color: #dc2626;
+  margin-top: 12px;
+  text-align: center;
+}
+</style>
+
+<section id="steel-calculator" class="steel-calculator">
+  <h2>Steel Weight Calculator</h2>
+  <p>Calculate reinforcement steel weight easily.</p>
+
+  <label for="steelDiameter">Bar Diameter (mm)</label>
+  <select id="steelDiameter">
+    <option value="8">8 mm</option>
+    <option value="10">10 mm</option>
+    <option value="12" selected>12 mm</option>
+    <option value="16">16 mm</option>
+    <option value="20">20 mm</option>
+    <option value="25">25 mm</option>
+    <option value="32">32 mm</option>
+  </select>
+
+  <label for="steelLength">Length of One Bar</label>
+  <input type="number" id="steelLength" min="0.001" step="any" placeholder="Enter length">
+
+  <label for="steelUnit">Length Unit</label>
+  <select id="steelUnit">
+    <option value="m">Metre (m)</option>
+    <option value="ft">Feet (ft)</option>
+  </select>
+
+  <label for="steelBars">Number of Bars</label>
+  <input type="number" id="steelBars" min="1" step="1" placeholder="Enter number of bars">
+
+  <button type="button" onclick="steelCalculate()">Calculate Steel Weight</button>
+
+  <div id="steelError" role="alert"></div>
+
+  <div id="steelResult" aria-live="polite">
+    <h3>Calculation Result</h3>
+    <div id="steelOutput"></div>
+  </div>
+</section>
+
+<script>
+function steelCalculate() {
+  const diameter = Number(document.getElementById("steelDiameter").value);
+  const length = Number(document.getElementById("steelLength").value);
+  const unit = document.getElementById("steelUnit").value;
+  const bars = Number(document.getElementById("steelBars").value);
+
+  const error = document.getElementById("steelError");
+  const result = document.getElementById("steelResult");
+  const output = document.getElementById("steelOutput");
+
+  error.textContent = "";
+  result.style.display = "none";
+
+  if (!Number.isFinite(length) || length <= 0 ||
+      !Number.isInteger(bars) || bars <= 0) {
+    error.textContent = "Please enter a valid positive length and whole number of bars.";
+    return;
+  }
+
+  // Convert feet to metres when required
+  const lengthMetres = unit === "ft" ? length * 0.3048 : length;
+
+  // Approximate nominal steel weight formula
+  const weightPerMetre = (diameter * diameter) / 162;
+
+  const weightPerBar = weightPerMetre * lengthMetres;
+  const totalLength = lengthMetres * bars;
+  const totalWeight = weightPerBar * bars;
+  const totalTonnes = totalWeight / 1000;
+
+  output.innerHTML =
+    "<p><strong>Bar Diameter:</strong> " + diameter + " mm</p>" +
+    "<p><strong>Length of One Bar:</strong> " + lengthMetres.toFixed(3) + " m</p>" +
+    "<p><strong>Number of Bars:</strong> " + bars + "</p>" +
+    "<p><strong>Total Length:</strong> " + totalLength.toFixed(3) + " m</p>" +
+    "<p><strong>Weight per Metre:</strong> " + weightPerMetre.toFixed(3) + " kg</p>" +
+    "<p><strong>Weight per Bar:</strong> " + weightPerBar.toFixed(3) + " kg</p>" +
+    "<h3>Total Steel Weight: " + totalWeight.toFixed(3) + " kg</h3>" +
+    "<h3>Total Weight: " + totalTonnes.toFixed(4) + " tonne</h3>";
+
+  result.style.display = "block";
+}
+</script>
 
 </body>
 </html>
