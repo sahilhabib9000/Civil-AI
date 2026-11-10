@@ -360,6 +360,188 @@ function steelCalculate() {
 }
 </script>
 
+<style>
+.brick-calculator {
+  max-width: 650px;
+  margin: 35px auto;
+  padding: 25px;
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+  font-family: Arial, sans-serif;
+}
+.brick-calculator h2 {
+  text-align: center;
+  color: #087f5b;
+}
+.brick-calculator p {
+  text-align: center;
+  color: #64748b;
+}
+.brick-calculator label {
+  display: block;
+  margin-top: 16px;
+  font-weight: bold;
+}
+.brick-calculator input,
+.brick-calculator select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  margin-top: 7px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 16px;
+}
+.brick-calculator button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 22px;
+  background: #087f5b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+#brickResult {
+  display: none;
+  margin-top: 22px;
+  padding: 16px;
+  background: #ecfdf5;
+  border-radius: 8px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+#brickError {
+  color: #dc2626;
+  margin-top: 12px;
+  text-align: center;
+}
+</style>
+
+<section id="brick-calculator" class="brick-calculator">
+  <h2>Brick Calculator</h2>
+  <p>Estimate bricks and mortar for your wall.</p>
+
+  <label for="brickLength">Wall Length</label>
+  <input type="number" id="brickLength" min="0.001" step="any" placeholder="Enter wall length">
+
+  <label for="brickHeight">Wall Height</label>
+  <input type="number" id="brickHeight" min="0.001" step="any" placeholder="Enter wall height">
+
+  <label for="brickThickness">Wall Thickness</label>
+  <input type="number" id="brickThickness" min="0.001" step="any" placeholder="Enter wall thickness">
+
+  <label for="brickUnit">Measurement Unit</label>
+  <select id="brickUnit">
+    <option value="m">Metre (m)</option>
+    <option value="ft">Feet (ft)</option>
+  </select>
+
+  <label for="brickJoint">Mortar Joint (mm)</label>
+  <input type="number" id="brickJoint" value="10" min="0" max="30" step="1">
+
+  <label for="brickWastage">Brick Wastage (%)</label>
+  <input type="number" id="brickWastage" value="5" min="0" max="30" step="any">
+
+  <button type="button" onclick="brickCalculate()">
+    Calculate Bricks
+  </button>
+
+  <div id="brickError" role="alert"></div>
+
+  <div id="brickResult" aria-live="polite">
+    <h3>Calculation Result</h3>
+    <div id="brickOutput"></div>
+  </div>
+</section>
+
+<script>
+function brickCalculate() {
+  const length = Number(document.getElementById("brickLength").value);
+  const height = Number(document.getElementById("brickHeight").value);
+  const thickness = Number(document.getElementById("brickThickness").value);
+  const unit = document.getElementById("brickUnit").value;
+  const joint = Number(document.getElementById("brickJoint").value);
+  const wastage = Number(document.getElementById("brickWastage").value);
+
+  const error = document.getElementById("brickError");
+  const result = document.getElementById("brickResult");
+  const output = document.getElementById("brickOutput");
+
+  error.textContent = "";
+  result.style.display = "none";
+
+  if (
+    !Number.isFinite(length) || length <= 0 ||
+    !Number.isFinite(height) || height <= 0 ||
+    !Number.isFinite(thickness) || thickness <= 0 ||
+    !Number.isFinite(joint) || joint < 0 || joint > 30 ||
+    !Number.isFinite(wastage) || wastage < 0 || wastage > 30
+  ) {
+    error.textContent = "Please enter valid positive dimensions, joint and wastage values.";
+    return;
+  }
+
+  // Convert all wall dimensions into metres
+  const conversion = unit === "ft" ? 0.3048 : 1;
+  const wallLength = length * conversion;
+  const wallHeight = height * conversion;
+  const wallThickness = thickness * conversion;
+
+  // Standard actual brick size in metres: 190 x 90 x 90 mm
+  const brickL = 0.190;
+  const brickW = 0.090;
+  const brickH = 0.090;
+
+  // Add mortar joint to each brick dimension
+  const jointMetres = joint / 1000;
+  const nominalBrickVolume =
+    (brickL + jointMetres) *
+    (brickW + jointMetres) *
+    (brickH + jointMetres);
+
+  const actualBrickVolume = brickL * brickW * brickH;
+
+  // Wall volume
+  const wallVolume = wallLength * wallHeight * wallThickness;
+
+  // Estimated base brick count before wastage
+  const baseBricks = wallVolume / nominalBrickVolume;
+
+  // Add wastage
+  const totalBricks = Math.ceil(
+    baseBricks * (1 + wastage / 100)
+  );
+
+  // Estimated wet mortar volume before wastage
+  const mortarVolume = Math.max(
+    0,
+    wallVolume - (baseBricks * actualBrickVolume)
+  );
+
+  output.innerHTML =
+    "<p><strong>Wall Volume:</strong> " +
+    wallVolume.toFixed(3) + " m³</p>" +
+    "<p><strong>Bricks Before Wastage:</strong> " +
+    Math.ceil(baseBricks) + " pieces</p>" +
+    "<p><strong>Wastage:</strong> " +
+    wastage + "%</p>" +
+    "<h3>Total Bricks Required: " +
+    totalBricks.toLocaleString("en-IN") + " pieces</h3>" +
+    "<p><strong>Estimated Wet Mortar Volume:</strong> " +
+    mortarVolume.toFixed(3) + " m³</p>" +
+    "<p><strong>Brick Size:</strong> 190 × 90 × 90 mm</p>" +
+    "<p><strong>Mortar Joint:</strong> " +
+    joint + " mm</p>";
+
+  result.style.display = "block";
+}
+</script>
+
 
 
 
