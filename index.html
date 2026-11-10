@@ -328,44 +328,38 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 <!-- JavaScript Code for Steel Calculator -->
 <script>
 function steelCalculate() {
-    // Get values from input fields
     const dia = parseFloat(document.getElementById('steelDiameter').value);
     const length = parseFloat(document.getElementById('steelLength').value);
     const unit = document.getElementById('steelUnit').value;
     const bars = parseInt(document.getElementById('steelBars').value);
     
-    const resultDiv = document.getElementById('steelResult');
+    const resultBox = document.getElementById('steelResult');
     const errorDiv = document.getElementById('steelError');
-    const outputDiv = document.getElementById('steel10output');
 
-    // Validate inputs
     if (isNaN(length) || isNaN(bars) || length <= 0 || bars <= 0) {
         if (errorDiv) {
             errorDiv.style.display = 'block';
             errorDiv.innerText = 'Please enter valid length and number of bars.';
         }
-        if (resultDiv) {
-            resultDiv.style.display = 'none';
-        }
+        if (resultBox) resultBox.style.display = 'none';
         return;
     }
 
-    // Hide error and show result box if input is valid
     if (errorDiv) errorDiv.style.display = 'none';
-    if (resultDiv) resultDiv.style.display = 'block';
 
-    // Convert length to meters if the unit is in feet (1 foot = 0.3048 meters)
     let lengthInMeters = (unit === 'ft') ? length * 0.3048 : length;
-
-    // Standard formula for steel weight calculation
     let weight = (Math.pow(dia, 2) / 162.2) * lengthInMeters * bars;
 
-    // Display the final calculation result
-    if (outputDiv) {
-        outputDiv.innerHTML = `<p style="font-size: 16px; font-weight: bold; color: #087f5b;">Total Steel Weight: ${weight.toFixed(2)} kg</p>`;
+    if (resultBox) {
+        resultBox.style.display = 'block';
+        resultBox.innerHTML = `
+            <h3 style="color: #087f5b; margin-top: 12px; text-align: center;">Calculation Result</h3>
+            <p style="font-size: 16px; font-weight: bold; color: #087f5b; text-align: center;">Total Steel Weight: ${weight.toFixed(2)} kg</p>
+        `;
     }
 }
 </script>
+
 
 
 
