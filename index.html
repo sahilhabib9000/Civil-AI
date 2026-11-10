@@ -546,5 +546,280 @@ function brickCalculate() {
 
 
 
+<style>
+.boq-tool {
+  max-width: 950px;
+  margin: 35px auto;
+  padding: 24px;
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+  font-family: Arial, sans-serif;
+}
+.boq-tool h2 {
+  text-align: center;
+  color: #087f5b;
+}
+.boq-tool .boq-subtitle {
+  text-align: center;
+  color: #64748b;
+}
+.boq-tool label {
+  display: block;
+  font-weight: bold;
+  margin-top: 14px;
+}
+.boq-tool input,
+.boq-tool select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 15px;
+}
+.boq-tool button {
+  padding: 11px 16px;
+  margin: 12px 5px 5px 0;
+  border: 0;
+  border-radius: 7px;
+  background: #087f5b;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+.boq-tool button.remove-boq {
+  background: #dc2626;
+}
+.boq-table-wrap {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+.boq-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+}
+.boq-table th,
+.boq-table td {
+  border: 1px solid #cbd5e1;
+  padding: 9px;
+  text-align: left;
+}
+.boq-table th {
+  background: #e2f5ec;
+}
+.boq-table td input,
+.boq-table td select {
+  min-width: 75px;
+  margin: 0;
+}
+.boq-total {
+  max-width: 380px;
+  margin: 20px 0 0 auto;
+  padding: 15px;
+  background: #ecfdf5;
+  border-radius: 8px;
+  line-height: 2;
+}
+.boq-total strong {
+  color: #087f5b;
+}
+.boq-note {
+  color: #64748b;
+  font-size: 13px;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #boq-generator,
+  #boq-generator * {
+    visibility: visible;
+  }
+  #boq-generator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    box-shadow: none;
+  }
+  .boq-no-print {
+    display: none !important;
+  }
+}
+</style>
+
+<section id="boq-generator" class="boq-tool" hidden>
+  <h2>CIVIL AI Professional BOQ</h2>
+  <p class="boq-subtitle">Professional Bill of Quantities Generator</p>
+
+  <p><strong>Premium Tool – Internal Testing</strong></p>
+
+  <label for="boqProject">Project Name</label>
+  <input id="boqProject" type="text" placeholder="Enter project name">
+
+  <label for="boqClient">Client Name</label>
+  <input id="boqClient" type="text" placeholder="Enter client name">
+
+  <label for="boqLocation">Project Location</label>
+  <input id="boqLocation" type="text" placeholder="Enter project location">
+
+  <div class="boq-table-wrap">
+    <table class="boq-table">
+      <thead>
+        <tr>
+          <th>Work Description</th>
+          <th>Quantity</th>
+          <th>Unit</th>
+          <th>Rate</th>
+          <th>Amount</th>
+          <th class="boq-no-print">Action</th>
+        </tr>
+      </thead>
+      <tbody id="boqRows">
+        <tr>
+          <td><input class="boq-desc" value="Earthwork Excavation"></td>
+          <td><input class="boq-qty" type="number" min="0" step="any" value="10"></td>
+          <td>
+            <select class="boq-unit">
+              <option>m³</option>
+              <option>m²</option>
+              <option>m</option>
+              <option>kg</option>
+              <option>tonne</option>
+              <option>Nos</option>
+              <option>LS</option>
+            </select>
+          </td>
+          <td><input class="boq-rate" type="number" min="0" step="any" value="500"></td>
+          <td class="boq-amount">5000.00</td>
+          <td class="boq-no-print">
+            <button type="button" class="remove-boq" onclick="boqRemoveRow(this)">Remove</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="boq-no-print">
+    <button type="button" onclick="boqAddRow()">+ Add Item</button>
+  </div>
+
+  <label for="boqGst">GST / Tax (%)</label>
+  <input id="boqGst" type="number" min="0" max="100" step="any" value="0">
+
+  <div class="boq-total">
+    <div>Subtotal: <strong id="boqSubtotal">₹5,000.00</strong></div>
+    <div>Tax: <strong id="boqTax">₹0.00</strong></div>
+    <div>Grand Total: <strong id="boqGrandTotal">₹5,000.00</strong></div>
+  </div>
+
+  <div class="boq-no-print">
+    <button type="button" onclick="boqCalculate()">Calculate BOQ</button>
+    <button type="button" onclick="boqPrint()">Print / Save PDF</button>
+  </div>
+
+  <p class="boq-note">
+    Amounts are estimates based on the quantities and rates entered.
+    Verify project measurements, rates and applicable taxes before use.
+  </p>
+</section>
+
+<script>
+function boqAddRow() {
+  const tbody = document.getElementById("boqRows");
+  const row = document.createElement("tr");
+
+  row.innerHTML = `
+    <td><input class="boq-desc" type="text" placeholder="Work description"></td>
+    <td><input class="boq-qty" type="number" min="0" step="any" value="1"></td>
+    <td>
+      <select class="boq-unit">
+        <option>m³</option>
+        <option>m²</option>
+        <option>m</option>
+        <option>kg</option>
+        <option>tonne</option>
+        <option>Nos</option>
+        <option>LS</option>
+      </select>
+    </td>
+    <td><input class="boq-rate" type="number" min="0" step="any" value="0"></td>
+    <td class="boq-amount">0.00</td>
+    <td class="boq-no-print">
+      <button type="button" class="remove-boq" onclick="boqRemoveRow(this)">Remove</button>
+    </td>
+  `;
+
+  tbody.appendChild(row);
+  boqCalculate();
+}
+
+function boqRemoveRow(button) {
+  const tbody = document.getElementById("boqRows");
+  if (tbody.rows.length <= 1) {
+    alert("At least one BOQ item is required.");
+    return;
+  }
+  button.closest("tr").remove();
+  boqCalculate();
+}
+
+function boqCalculate() {
+  const rows = document.querySelectorAll("#boqRows tr");
+  const gst = Number(document.getElementById("boqGst").value);
+
+  if (!Number.isFinite(gst) || gst < 0 || gst > 100) {
+    alert("Enter a valid tax percentage between 0 and 100.");
+    return;
+  }
+
+  let subtotal = 0;
+
+  for (const row of rows) {
+    const qty = Number(row.querySelector(".boq-qty").value);
+    const rate = Number(row.querySelector(".boq-rate").value);
+
+    if (!Number.isFinite(qty) || qty < 0 ||
+        !Number.isFinite(rate) || rate < 0) {
+      alert("Quantity and rate must be valid non-negative numbers.");
+      return;
+    }
+
+    const amount = qty * rate;
+    subtotal += amount;
+    row.querySelector(".boq-amount").textContent =
+      amount.toFixed(2);
+  }
+
+  const taxAmount = subtotal * gst / 100;
+  const grandTotal = subtotal + taxAmount;
+
+  document.getElementById("boqSubtotal").textContent =
+    "₹" + subtotal.toFixed(2);
+  document.getElementById("boqTax").textContent =
+    "₹" + taxAmount.toFixed(2);
+  document.getElementById("boqGrandTotal").textContent =
+    "₹" + grandTotal.toFixed(2);
+}
+
+function boqPrint() {
+  boqCalculate();
+  window.print();
+}
+
+document.addEventListener("input", function(event) {
+  if (event.target.closest("#boq-generator")) {
+    if (event.target.matches(".boq-qty, .boq-rate, #boqGst")) {
+      boqCalculate();
+    }
+  }
+});
+</script>
+
 </body>
 </html>
