@@ -542,6 +542,157 @@ function brickCalculate() {
 }
 </script>
 
+<!-- CIVIL AI - AI ENGINEERING ASSISTANT -->
+<section id="ai-assistant" class="ai-assistant">
+  <div class="ai-header">
+    <div>
+      <h2>🤖 AI Engineering Assistant</h2>
+      <p>Your Free Civil Engineering Helper</p>
+    </div>
+    <span class="ai-free-badge">FREE</span>
+  </div>
+
+  <div class="ai-chat-box" id="aiChatBox">
+    <div class="ai-message ai-bot">
+      Hello! Welcome to CIVIL AI.<br>
+      Ask me about concrete, steel, bricks,
+      construction, surveying or civil engineering.
+    </div>
+  </div>
+
+  <form id="aiChatForm" class="ai-chat-form">
+    <textarea
+      id="aiQuestion"
+      placeholder="Ask your civil engineering question..."
+      required
+      rows="2"
+    ></textarea>
+    <button type="submit" id="aiSendBtn">Send ➤</button>
+  </form>
+
+  <p class="ai-note">
+    AI connection is being configured. Answers will be
+    activated after secure AI backend integration.
+  </p>
+</section>
+
+<style>
+.ai-assistant {
+  max-width: 850px;
+  margin: 35px auto;
+  padding: 22px;
+  background: #101c2b;
+  color: white;
+  border: 1px solid #29435b;
+  border-radius: 16px;
+  font-family: Arial, sans-serif;
+}
+.ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ai-header h2 {
+  color: #38e6a0;
+  margin: 0 0 8px;
+}
+.ai-header p, .ai-note {
+  color: #b9c9d8;
+  font-size: 13px;
+}
+.ai-free-badge {
+  background: #087e50;
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+.ai-chat-box {
+  height: 300px;
+  overflow-y: auto;
+  background: #08121e;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 20px 0;
+}
+.ai-message {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.ai-bot {
+  background: #20364a;
+  color: white;
+  margin-right: 12%;
+}
+.ai-user {
+  background: #087e50;
+  color: white;
+  margin-left: 12%;
+}
+.ai-chat-form {
+  display: flex;
+  gap: 10px;
+}
+.ai-chat-form textarea {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid #49627a;
+  background: #172a3c;
+  color: white;
+  resize: vertical;
+}
+.ai-chat-form button {
+  background: #00c982;
+  color: #06251a;
+  border: none;
+  border-radius: 9px;
+  padding: 12px 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.ai-note {
+  margin-bottom: 0;
+}
+@media(max-width:500px) {
+  .ai-chat-form {
+    flex-direction: column;
+  }
+}
+</style>
+
+<script>
+document.getElementById("aiChatForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const input = document.getElementById("aiQuestion");
+  const chat = document.getElementById("aiChatBox");
+  const question = input.value.trim();
+
+  if (!question) return;
+
+  const userMessage = document.createElement("div");
+  userMessage.className = "ai-message ai-user";
+  userMessage.textContent = question;
+  chat.appendChild(userMessage);
+
+  const reply = document.createElement("div");
+  reply.className = "ai-message ai-bot";
+  reply.textContent =
+    "Your question has been received. The secure CIVIL AI connection is not active yet. We will connect the AI backend in the next development step.";
+  chat.appendChild(reply);
+
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
+});
+</script>
+<!-- END AI ENGINEERING ASSISTANT -->
+
 
 
 
