@@ -19,5 +19,25 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run read-only audit
-        run: python tools/civil_ai_audit.py
+      - name: Run read-only audit and save report
+        run: |
+          set -o pipefail
+          python tools/civil_ai_audit.py | tee civil-ai-audit-report.json
+      - name: Add report to workflow summary
+        if: always()
+        run: |
+          echo "## CIVIL AI Read-only Audit" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f civil-ai-audit-report.json ]; then
+            echo ' ```json' >> "$GITHUB_STEP_SUMMARY"
+            cat civil-ai-audit-report.json >> "$GITHUB_STEP_SUMMARY"
+            echo ' ```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Audit did not produce a report. Check the job logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload audit report
+        if: always() && hashFiles('civil-ai-audit-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: civil-ai-audit-report
+          path: civil-ai-audit-report.json
+          if-no-files-found: ignore
