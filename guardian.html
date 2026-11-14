@@ -199,13 +199,13 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
   </section>
 
   <section id="bugs" hidden>
-    <h2 class="section-title">Autonomous Bug Fixer</h2>
+    <h2 class="section-title">Bug Fixer Agent</h2>
     <div class="module-grid">
-      <div class="module"><div class="ico">⌕</div><h3>Bug Detection</h3><p>Scan source code and identify errors.</p><button class="action" onclick="pending('Bug Scan')">Scan for Bugs</button></div>
-      <div class="module"><div class="ico">⚙</div><h3>Safe Repair</h3><p>Prepare proposed fixes in a separate branch.</p><button class="action" onclick="pending('Safe Repair')">Repair Approved Issues</button></div>
-      <div class="module"><div class="ico">✓</div><h3>Testing</h3><p>Run build and functionality checks.</p><button class="action" onclick="pending('Automated Tests')">Run Tests</button></div>
+      <div class="module"><div class="ico">⌕</div><h3>Bug Detection</h3><p>Scan source code and identify errors.</p><a class="action primary" href="https://github.com/sahilhabib9000/Civil-AI/actions/workflows/civil-ai-bug-fixer.yml" target="_blank" rel="noopener noreferrer">Run Bug Scan ↗</a></div>
+      <div class="module"><div class="ico">⚙</div><h3>Safe Repair</h3><p>Prepare proposed fixes in a separate branch.</p><a class="action" href="https://github.com/sahilhabib9000/Civil-AI/issues" target="_blank" rel="noopener noreferrer">Review / Track Fixes ↗</a></div>
+      <div class="module"><div class="ico">✓</div><h3>Testing</h3><p>Run build and functionality checks.</p><a class="action" href="https://github.com/sahilhabib9000/Civil-AI/actions" target="_blank" rel="noopener noreferrer">View Test Runs ↗</a></div>
     </div>
-    <div class="notice">Safety rule: no untested code will be sent to production. Payment, security, access-control and engineering-calculation changes require owner approval.</div>
+    <div class="notice">Current Bug Fixer mode: read-only scan, report artifact and GitHub issue on detected failures. It does not change source code or deploy automatically. Fixes must be prepared on a separate branch, tested, reviewed and approved before merge. Payment, security, access-control and engineering-calculation changes always require owner approval.</div>
   </section>
 
   <section id="security" hidden>
