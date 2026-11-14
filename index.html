@@ -39,11 +39,11 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 <section id="tools">
 <h2>Engineering Tools</h2>
 <div class="cards">
-<div class="card"><h3>Concrete Calculator</h3><p>Calculate concrete volume for slabs, beams and columns.</p><a href="#contact">Coming Soon →</a></div>
-<div class="card"><h3>Steel Calculator</h3><p>Estimate reinforcement steel weight and quantities.</p><a href="#contact">Coming Soon →</a></div>
-<div class="card"><h3>Brick Calculator</h3><p>Estimate bricks and mortar for masonry work.</p><a href="#contact">Coming Soon →</a></div>
+<div class="card"><h3>Concrete Calculator</h3><p>Calculate concrete volume for slabs, beams and columns.</p><a href="#civil-concrete">Open Calculator →</a></div>
+<div class="card"><h3>Steel Calculator</h3><p>Estimate reinforcement steel weight and quantities.</p><a href="#steel-calculator">Open Calculator →</a></div>
+<div class="card"><h3>Brick Calculator</h3><p>Estimate bricks and mortar for masonry work.</p><a href="#brick-calculator">Open Calculator →</a></div>
 <div class="card"><h3>BOQ Generator</h3><p>Plan construction quantities and project estimates.</p><a href="#contact">Coming Soon →</a></div>
-<div class="card"><h3>AI Engineering Assistant</h3><p>Your future AI assistant for civil engineering tasks.</p><a href="#contact">Coming Soon →</a></div>
+<div class="card"><h3>AI Engineering Assistant</h3><p>Your free civil engineering helper.</p><a href="#ai-assistant">Open Assistant →</a></div>
 <div class="card"><h3>Project Reports</h3><p>Organize construction project information and reports.</p><a href="#contact">Coming Soon →</a></div>
 </div>
 </section>
@@ -328,18 +328,23 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 <!-- JavaScript Code for Steel Calculator -->
 <script>
 function steelCalculate() {
-    const dia = parseFloat(document.getElementById('steelDiameter').value);
-    const length = parseFloat(document.getElementById('steelLength').value);
+    const dia = Number(document.getElementById('steelDiameter').value);
+    const length = Number(document.getElementById('steelLength').value);
     const unit = document.getElementById('steelUnit').value;
-    const bars = parseInt(document.getElementById('steelBars').value);
-    
+    const bars = Number(document.getElementById('steelBars').value);
+
     const resultBox = document.getElementById('steelResult');
     const errorDiv = document.getElementById('steelError');
 
-    if (isNaN(length) || isNaN(bars) || length <= 0 || bars <= 0) {
+    if (
+        !Number.isFinite(dia) || dia <= 0 ||
+        !Number.isFinite(length) || length <= 0 ||
+        !Number.isInteger(bars) || bars <= 0 ||
+        !['m', 'ft'].includes(unit)
+    ) {
         if (errorDiv) {
             errorDiv.style.display = 'block';
-            errorDiv.innerText = 'Please enter valid length and number of bars.';
+            errorDiv.innerText = 'Please select a valid bar diameter and enter a positive length and whole number of bars.';
         }
         if (resultBox) resultBox.style.display = 'none';
         return;
