@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIVIL AI | Company Guardian</title>
+<style>
+:root {
+  --bg:#0b1120;
+  --panel:#121c30;
+  --panel2:#18243a;
+  --line:#26354d;
+  --text:#edf3ff;
+  --muted:#91a2bb;
+  --green:#35d49a;
+  --blue:#63a9ff;
+  --orange:#ffbd69;
+  --red:#ff727c;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+}
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:245px;background:#0e1729;border-right:1px solid var(--line);
+  padding:24px 16px;flex-shrink:0;
+}
+.brand{font-size:21px;font-weight:800;letter-spacing:1px}
+.brand span{color:var(--green)}
+.tagline{font-size:11px;color:var(--muted);margin:7px 0 30px}
+.nav-title{font-size:10px;color:var(--muted);margin:22px 10px 9px;letter-spacing:1.5px}
+.nav button{
+  width:100%;display:block;text-align:left;padding:12px;
+  border:0;border-radius:9px;background:transparent;color:#b7c5da;
+  margin:4px 0;cursor:pointer;font-size:13px;
+}
+.nav button:hover,.nav button.active{background:#1d3048;color:white}
+.nav button.active{border-left:3px solid var(--green)}
+.sidebar-note{
+  margin-top:35px;padding:13px;background:#14283a;border:1px solid #24445a;
+  border-radius:10px;font-size:11px;color:#a9c5d8;line-height:1.6
+}
+main{flex:1;min-width:0;padding:28px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:25px;margin:0 0 7px}
+.sub{font-size:12px;color:var(--muted)}
+.status{border:1px solid #27664f;color:var(--green);padding:8px 12px;border-radius:20px;font-size:11px}
+.welcome{
+  margin:25px 0;padding:23px;border:1px solid #29445d;border-radius:15px;
+  background:linear-gradient(115deg,#142b40,#17213a);
+}
+.welcome h2{margin:0 0 9px;font-size:20px}
+.welcome p{margin:0;color:#b0bfd2;font-size:13px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:17px 0}
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:17px;min-width:0
+}
+.metric-label{font-size:11px;color:var(--muted)}
+.metric-value{font-size:25px;font-weight:700;margin:12px 0 5px}
+.metric-note{font-size:10px;color:var(--muted)}
+.section-title{font-size:16px;margin:28px 0 13px}
+.two-col{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+.agent{
+  display:flex;align-items:center;gap:12px;padding:13px 0;
+  border-bottom:1px solid var(--line)
+}
+.agent:last-child{border:0}
+.agent-icon{
+  width:37px;height:37px;border-radius:10px;background:#20344e;
+  display:grid;place-items:center;font-size:17px
+}
+.agent-info{flex:1}
+.agent-info strong{font-size:12px}
+.agent-info small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.pending{font-size:10px;color:var(--orange)}
+.module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.module{
+  background:var(--panel);border:1px solid var(--line);
+  padding:17px;border-radius:12px
+}
+.module .ico{font-size:22px}
+.module h3{font-size:13px;margin:12px 0 7px}
+.module p{font-size:11px;color:var(--muted);line-height:1.5;min-height:32px}
+button.action{
+  background:#1e3c55;color:#dceeff;border:1px solid #315573;
+  border-radius:7px;padding:9px 12px;cursor:pointer;font-size:11px
+}
+button.action:hover{background:#28516f}
+button.primary{background:#147b5c;border-color:#209a73;color:white}
+.activity{font-size:11px;color:#b7c5da;padding:12px 0;border-bottom:1px solid var(--line)}
+.activity:last-child{border:0}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--orange);margin-right:8px}
+.notice{
+  margin-top:18px;border:1px solid #69512d;background:#2b2419;
+  color:#e7c895;padding:13px;border-radius:10px;font-size:11px;line-height:1.6
+}
+footer{color:var(--muted);font-size:10px;margin-top:28px}
+#toast{
+  display:none;position:fixed;bottom:22px;right:22px;max-width:330px;
+  background:#20344e;border:1px solid #45627e;padding:14px 17px;
+  border-radius:10px;font-size:12px;box-shadow:0 8px 30px #0008
+}
+@media(max-width:950px){
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .module-grid{grid-template-columns:repeat(2,1fr)}
+ .two-col{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+ .layout{display:block}
+ .sidebar{width:100%;padding:15px}
+ .sidebar .nav{display:flex;overflow-x:auto;gap:5px}
+ .nav-title,.sidebar-note{display:none}
+ .nav button{white-space:nowrap;width:auto}
+ main{padding:17px}
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .module-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">CIVIL <span>AI</span></div>
+  <div class="tagline">COMPANY MANAGEMENT SYSTEM</div>
+  <div class="nav-title">CONTROL CENTER</div>
+  <div class="nav">
+    <button class="active" onclick="showSection('overview',this)">▦ Overview</button>
+    <button onclick="showSection('agents',this)">◈ AI Workforce</button>
+    <button onclick="showSection('guardian',this)">⌕ Company Audit</button>
+    <button onclick="showSection('bugs',this)">⚙ Bug Fixer</button>
+    <button onclick="showSection('security',this)">♢ Security Center</button>
+    <button onclick="showSection('premium',this)">◇ Premium Monitor</button>
+    <button onclick="showSection('reports',this)">▤ Reports & Logs</button>
+  </div>
+  <div class="sidebar-note">
+    <strong>OWNER CONTROL</strong><br>
+    Sensitive production changes require owner approval.
+  </div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <div>
+      <h1>Company Guardian</h1>
+      <div class="sub">Central control room for the CIVIL AI platform</div>
+    </div>
+    <div class="status">● DASHBOARD READY</div>
+  </div>
+
+  <section id="overview">
+    <div class="welcome">
+      <h2>Welcome to your Company Control Center</h2>
+      <p>Monitor your AI workforce, platform health, security, bugs and business operations from one place.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="metric-label">AI AGENT ROLES</div><div class="metric-value">8</div><div class="metric-note">Planned specialist roles</div></div>
+      <div class="card"><div class="metric-label">BUGS DETECTED</div><div class="metric-value">—</div><div class="metric-note">GitHub scan not connected</div></div>
+      <div class="card"><div class="metric-label">SYSTEM HEALTH</div><div class="metric-value">—</div><div class="metric-note">Live monitoring pending</div></div>
+      <div class="card"><div class="metric-label">APPROVAL QUEUE</div><div class="metric-value">—</div><div class="metric-note">Approval integration pending</div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3 class="section-title" style="margin-top:0">AI Workforce</h3>
+        <div class="agent"><div class="agent-icon">◈</div><div class="agent-info"><strong>Company Guardian</strong><small>Company-wide monitoring</small></div><span class="pending">PLANNED</span></div>
+        <div class="agent"><div class="agent-icon">⌘</div><div class="agent-info"><strong>Development Agent</strong><small>Website and backend development</small></div><span class="pending">PLANNED</span></div>
+        <div class="agent"><div class="agent-icon">⚙</div><div class="agent-info"><strong>Bug Fixer Agent</strong><small>Detection, repair and testing</small></div><span class="pending">PLANNED</span></div>
+        <div class="agent"><div class="agent-icon">✓</div><div class="agent-info"><strong>QA Agent</strong><small>Quality and feature testing</small></div><span class="pending">PLANNED</span></div>
+        <div class="agent"><div class="agent-icon">♢</div><div class="agent-info"><strong>Security Agent</strong><small>Security and access checks</small></div><span class="pending">PLANNED</span></div>
+      </div>
+      <div class="card">
+        <h3 class="section-title" style="margin-top:0">Recent Activity</h3>
+        <div class="activity"><span class="dot"></span>Guardian dashboard file created</div>
+        <div class="activity"><span class="dot"></span>GitHub integration pending</div>
+        <div class="activity"><span class="dot"></span>Automated testing pending</div>
+        <div class="activity"><span class="dot"></span>Cloudflare connection pending</div>
+        <div class="activity"><span class="dot"></span>Premium monitoring pending</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="agents" hidden>
+    <h2 class="section-title">AI Workforce Management</h2>
+    <div class="module-grid" id="agentCards"></div>
+  </section>
+
+  <section id="guardian" hidden>
+    <h2 class="section-title">Full Company Audit</h2>
+    <div class="card">
+      <h3>Platform-wide audit</h3>
+      <p class="sub">The audit will inspect website pages, tools, integrations, workflows, security and incomplete features after the required connections are configured.</p>
+      <button class="action primary" onclick="pending('Full Company Audit')">Start Full Audit</button>
+    </div>
+  </section>
+
+  <section id="bugs" hidden>
+    <h2 class="section-title">Autonomous Bug Fixer</h2>
+    <div class="module-grid">
+      <div class="module"><div class="ico">⌕</div><h3>Bug Detection</h3><p>Scan source code and identify errors.</p><button class="action" onclick="pending('Bug Scan')">Scan for Bugs</button></div>
+      <div class="module"><div class="ico">⚙</div><h3>Safe Repair</h3><p>Prepare proposed fixes in a separate branch.</p><button class="action" onclick="pending('Safe Repair')">Repair Approved Issues</button></div>
+      <div class="module"><div class="ico">✓</div><h3>Testing</h3><p>Run build and functionality checks.</p><button class="action" onclick="pending('Automated Tests')">Run Tests</button></div>
+    </div>
+    <div class="notice">Safety rule: no untested code will be sent to production. Payment, security, access-control and engineering-calculation changes require owner approval.</div>
+  </section>
+
+  <section id="security" hidden>
+    <h2 class="section-title">Security Center</h2>
+    <div class="module-grid">
+      <div class="module"><div class="ico">♢</div><h3>Authentication</h3><p>Login and account access review.</p></div>
+      <div class="module"><div class="ico">▣</div><h3>API Protection</h3><p>Secrets and API access review.</p></div>
+      <div class="module"><div class="ico">◇</div><h3>Payment Security</h3><p>Premium payment and entitlement checks.</p></div>
+    </div>
+    <div class="notice">Security scanning is not connected yet. No security status is being claimed at this stage.</div>
+  </section>
+
+  <section id="premium" hidden>
+    <h2 class="section-title">Premium & Finance Monitor</h2>
+    <div class="card">
+      <p class="sub">Planned monitoring for payment verification, Premium login, subscription access and billing events.</p>
+      <button class="action" onclick="pending('Premium Monitoring')">Configure Premium Monitor</button>
+    </div>
+  </section>
+
+  <section id="reports" hidden>
+    <h2 class="section-title">Reports & Activity Logs</h2>
+    <div class="card">
+      <p class="sub">Audit reports, bug history, repair records, test results and deployment history will appear here after integrations are connected.</p>
+      <button class="action" onclick="pending('Reports Center')">Open Reports Setup</button>
+    </div>
+  </section>
+
+  <footer>CIVIL AI COMPANY GUARDIAN · OWNER CONTROLLED · VERSION 1.0 UI FOUNDATION</footer>
+</main>
+</div>
+<div id="toast"></div>
+
+<script>
+const agents = [
+ ["◈","Company Guardian","Company-wide monitoring"],
+ ["⌘","Development Agent","Website and backend development"],
+ ["⚙","Bug Fixer Agent","Error detection and safe repair"],
+ ["✓","QA Agent","Testing and quality assurance"],
+ ["♢","Security Agent","Security and access protection"],
+ ["◇","Finance Agent","Premium and payment monitoring"],
+ ["▦","Engineering Agent","Civil engineering assistance"],
+ ["⌕","Research Agent","Standards and technology research"]
+];
+document.getElementById("agentCards").innerHTML = agents.map(a =>
+ `<div class="module"><div class="ico">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p><span class="pending">NOT CONNECTED</span></div>`
+).join("");
+
+function showSection(id,btn){
+ document.querySelectorAll("main section").forEach(s=>s.hidden=true);
+ document.getElementById(id).hidden=false;
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+}
+function pending(name){
+ const t=document.getElementById("toast");
+ t.textContent=name+": integration is not connected yet. This dashboard is currently the UI foundation.";
+ t.style.display="block";
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(()=>t.style.display="none",4500);
+}
+</script>
+</body>
+</html>
