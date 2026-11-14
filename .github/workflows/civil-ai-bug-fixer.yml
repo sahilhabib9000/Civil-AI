@@ -1,0 +1,90 @@
+name: CIVIL AI Bug Fixer - Safe Triage
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  bug-triage:
+    name: Detect and report known source issues
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run current read-only checks
+        id: scan
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python tools/civil_ai_audit.py | tee bug-fixer-report.json
+
+      - name: Publish triage summary
+        if: always()
+        run: |
+          echo "## CIVIL AI Bug Fixer - Safe Triage" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f bug-fixer-report.json ]; then
+            echo ' ```json' >> "$GITHUB_STEP_SUMMARY"
+            cat bug-fixer-report.json >> "$GITHUB_STEP_SUMMARY"
+            echo ' ```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "The scan did not produce a report. Review the job logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Mode:** Read-only detection and issue reporting. No source files are changed automatically." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create a GitHub issue when checks fail
+        if: steps.scan.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.existsSync('bug-fixer-report.json')
+              ? fs.readFileSync('bug-fixer-report.json', 'utf8')
+              : 'No JSON report was generated.';
+            const title = 'Bug Fixer: source checks need attention';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            if (existing.data.some(issue => issue.title === title && !issue.pull_request)) {
+              core.info('An open Bug Fixer issue already exists; no duplicate issue created.');
+              return;
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ['bug'],
+              body: [
+                '## Automated Bug Fixer report',
+                '',
+                'The current read-only source checks found one or more issues.',
+                'No files were changed. Review the report, prepare a fix on a separate branch, and test it before merging.',
+                '',
+                '### Scan report',
+                '```json',
+                report,
+                '```',
+                '',
+                'Payment, authentication, security, access-control and engineering-calculation changes require owner approval.'
+              ].join('\\n')
+            });
+
+      - name: Upload scan report
+        if: always() && hashFiles('bug-fixer-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: civil-ai-bug-fixer-report
+          path: bug-fixer-report.json
+          if-no-files-found: ignore
