@@ -229,9 +229,10 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
   <section id="reports" hidden>
     <h2 class="section-title">Reports & Activity Logs</h2>
     <div class="card">
-      <p class="sub">Audit reports, bug history, repair records, test results and deployment history will appear here after integrations are connected.</p>
-      <button class="action" onclick="pending('Reports Center')">Open Reports Setup</button>
+      <p class="sub">The read-only HTML audit runs in GitHub Actions after commits to the main branch. Open the latest run to view its summary and download the JSON report artifact.</p>
+      <a class="action" href="https://github.com/sahilhabib9000/Civil-AI/actions/workflows/civil-ai-audit.yml" target="_blank" rel="noopener noreferrer">View Audit Runs & Reports ↗</a>
     </div>
+    <div class="notice">Current coverage: duplicate HTML IDs and broken internal anchor links in index.html and guardian.html. This is not yet a full security, backend, calculator or payment audit.</div>
   </section>
 
   <footer>CIVIL AI COMPANY GUARDIAN · OWNER CONTROLLED · VERSION 1.0 UI FOUNDATION</footer>
