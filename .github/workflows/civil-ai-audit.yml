@@ -34,6 +34,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Run concrete, steel and BOQ regression tests
+        run: node tests/calculator_regression.test.cjs
       - name: Run brick calculator regression tests
         run: node tests/brick_calculator.test.cjs
       - name: Run DOM and XSS regression guards
