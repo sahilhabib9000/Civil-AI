@@ -9,6 +9,7 @@ on:
       - "index.html"
       - "guardian.html"
       - "tools/civil_ai_audit.py"
+      - "tests/brick_calculator.test.cjs"
       - ".github/workflows/civil-ai-audit.yml"
   workflow_dispatch:
 
@@ -26,6 +27,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Set up Node.js for calculator regression tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run brick calculator regression tests
+        run: node tests/brick_calculator.test.cjs
       - name: Run read-only audit and save report
         run: |
           set -o pipefail

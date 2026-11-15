@@ -430,7 +430,7 @@ function steelCalculate() {
 
 <section id="brick-calculator" class="brick-calculator">
   <h2>Brick Calculator</h2>
-  <p>Estimate bricks and mortar for your wall.</p>
+  <p>Estimate bricks and mortar for your wall, excluding door and window openings.</p>
 
   <label for="brickLength">Wall Length</label>
   <input type="number" id="brickLength" min="0.001" step="any" placeholder="Enter wall length">
@@ -447,103 +447,122 @@ function steelCalculate() {
     <option value="ft">Feet (ft)</option>
   </select>
 
+  <h3>Door Openings</h3>
+  <label for="brickDoorCount">Number of Doors</label>
+  <input type="number" id="brickDoorCount" min="0" step="1" value="0">
+  <label for="brickDoorWidth">Door Width (same unit as wall)</label>
+  <input type="number" id="brickDoorWidth" min="0" step="any" placeholder="e.g. 0.9">
+  <label for="brickDoorHeight">Door Height (same unit as wall)</label>
+  <input type="number" id="brickDoorHeight" min="0" step="any" placeholder="e.g. 2.1">
+
+  <h3>Window Openings</h3>
+  <label for="brickWindowCount">Number of Windows</label>
+  <input type="number" id="brickWindowCount" min="0" step="1" value="0">
+  <label for="brickWindowWidth">Window Width (same unit as wall)</label>
+  <input type="number" id="brickWindowWidth" min="0" step="any" placeholder="e.g. 1.2">
+  <label for="brickWindowHeight">Window Height (same unit as wall)</label>
+  <input type="number" id="brickWindowHeight" min="0" step="any" placeholder="e.g. 1.2">
+
   <label for="brickJoint">Mortar Joint (mm)</label>
   <input type="number" id="brickJoint" value="10" min="0" max="30" step="1">
 
   <label for="brickWastage">Brick Wastage (%)</label>
   <input type="number" id="brickWastage" value="5" min="0" max="30" step="any">
 
-  <button type="button" onclick="brickCalculate()">
-    Calculate Bricks
-  </button>
+  <button type="button" onclick="brickCalculate()">Calculate Bricks</button>
 
   <div id="brickError" role="alert"></div>
-
   <div id="brickResult" aria-live="polite">
     <h3>Calculation Result</h3>
     <div id="brickOutput"></div>
   </div>
+  <p class="boq-note">Estimate assumes rectangular openings through the full wall thickness, standard 190 × 90 × 90 mm bricks and uniform masonry. It does not calculate lintels, jamb details, special bonds or structural requirements. Verify dimensions and site conditions before ordering.</p>
 </section>
 
 <script>
 function brickCalculate() {
-  const length = Number(document.getElementById("brickLength").value);
-  const height = Number(document.getElementById("brickHeight").value);
-  const thickness = Number(document.getElementById("brickThickness").value);
+  const getNumber = (id) => Number(document.getElementById(id).value);
+  const length = getNumber("brickLength");
+  const height = getNumber("brickHeight");
+  const thickness = getNumber("brickThickness");
   const unit = document.getElementById("brickUnit").value;
-  const joint = Number(document.getElementById("brickJoint").value);
-  const wastage = Number(document.getElementById("brickWastage").value);
+  const doorCount = getNumber("brickDoorCount");
+  const doorWidth = getNumber("brickDoorWidth");
+  const doorHeight = getNumber("brickDoorHeight");
+  const windowCount = getNumber("brickWindowCount");
+  const windowWidth = getNumber("brickWindowWidth");
+  const windowHeight = getNumber("brickWindowHeight");
+  const joint = getNumber("brickJoint");
+  const wastage = getNumber("brickWastage");
 
   const error = document.getElementById("brickError");
   const result = document.getElementById("brickResult");
   const output = document.getElementById("brickOutput");
-
   error.textContent = "";
   result.style.display = "none";
+
+  const validOpening = (count, width, openingHeight) =>
+    Number.isInteger(count) && count >= 0 &&
+    Number.isFinite(width) && width >= 0 &&
+    Number.isFinite(openingHeight) && openingHeight >= 0 &&
+    (count === 0 || (width > 0 && openingHeight > 0));
 
   if (
     !Number.isFinite(length) || length <= 0 ||
     !Number.isFinite(height) || height <= 0 ||
     !Number.isFinite(thickness) || thickness <= 0 ||
+    !["m", "ft"].includes(unit) ||
+    !validOpening(doorCount, doorWidth, doorHeight) ||
+    !validOpening(windowCount, windowWidth, windowHeight) ||
     !Number.isFinite(joint) || joint < 0 || joint > 30 ||
     !Number.isFinite(wastage) || wastage < 0 || wastage > 30
   ) {
-    error.textContent = "Please enter valid positive dimensions, joint and wastage values.";
+    error.textContent = "Enter positive wall dimensions, whole non-negative opening counts, valid opening sizes, mortar joint (0–30 mm) and wastage (0–30%).";
     return;
   }
 
-  // Convert all wall dimensions into metres
   const conversion = unit === "ft" ? 0.3048 : 1;
   const wallLength = length * conversion;
   const wallHeight = height * conversion;
   const wallThickness = thickness * conversion;
+  const grossWallVolume = wallLength * wallHeight * wallThickness;
+  const doorOpeningVolume = doorCount * doorWidth * conversion * doorHeight * conversion * wallThickness;
+  const windowOpeningVolume = windowCount * windowWidth * conversion * windowHeight * conversion * wallThickness;
+  const totalOpeningVolume = doorOpeningVolume + windowOpeningVolume;
 
-  // Standard actual brick size in metres: 190 x 90 x 90 mm
-  const brickL = 0.190;
-  const brickW = 0.090;
-  const brickH = 0.090;
+  if (totalOpeningVolume >= grossWallVolume) {
+    error.textContent = "Total door and window opening area must be smaller than the gross wall area.";
+    return;
+  }
 
-  // Add mortar joint to each brick dimension
+  if (
+    (doorCount > 0 && (doorWidth * conversion > wallLength || doorHeight * conversion > wallHeight)) ||
+    (windowCount > 0 && (windowWidth * conversion > wallLength || windowHeight * conversion > wallHeight))
+  ) {
+    error.textContent = "Each door or window must fit within the wall length and height.";
+    return;
+  }
+
+  const netWallVolume = grossWallVolume - totalOpeningVolume;
+  const brickL = 0.190, brickW = 0.090, brickH = 0.090;
   const jointMetres = joint / 1000;
-  const nominalBrickVolume =
-    (brickL + jointMetres) *
-    (brickW + jointMetres) *
-    (brickH + jointMetres);
-
+  const nominalBrickVolume = (brickL + jointMetres) * (brickW + jointMetres) * (brickH + jointMetres);
   const actualBrickVolume = brickL * brickW * brickH;
-
-  // Wall volume
-  const wallVolume = wallLength * wallHeight * wallThickness;
-
-  // Estimated base brick count before wastage
-  const baseBricks = wallVolume / nominalBrickVolume;
-
-  // Add wastage
-  const totalBricks = Math.ceil(
-    baseBricks * (1 + wastage / 100)
-  );
-
-  // Estimated wet mortar volume before wastage
-  const mortarVolume = Math.max(
-    0,
-    wallVolume - (baseBricks * actualBrickVolume)
-  );
+  const baseBricks = netWallVolume / nominalBrickVolume;
+  const totalBricks = Math.ceil(baseBricks * (1 + wastage / 100));
+  const mortarVolume = Math.max(0, netWallVolume - baseBricks * actualBrickVolume);
 
   output.innerHTML =
-    "<p><strong>Wall Volume:</strong> " +
-    wallVolume.toFixed(3) + " m³</p>" +
-    "<p><strong>Bricks Before Wastage:</strong> " +
-    Math.ceil(baseBricks) + " pieces</p>" +
-    "<p><strong>Wastage:</strong> " +
-    wastage + "%</p>" +
-    "<h3>Total Bricks Required: " +
-    totalBricks.toLocaleString("en-IN") + " pieces</h3>" +
-    "<p><strong>Estimated Wet Mortar Volume:</strong> " +
-    mortarVolume.toFixed(3) + " m³</p>" +
+    "<p><strong>Gross Wall Volume:</strong> " + grossWallVolume.toFixed(3) + " m³</p>" +
+    "<p><strong>Door Openings:</strong> " + doorOpeningVolume.toFixed(3) + " m³</p>" +
+    "<p><strong>Window Openings:</strong> " + windowOpeningVolume.toFixed(3) + " m³</p>" +
+    "<p><strong>Net Wall Volume:</strong> " + netWallVolume.toFixed(3) + " m³</p>" +
+    "<p><strong>Bricks Before Wastage:</strong> " + Math.ceil(baseBricks).toLocaleString("en-IN") + " pieces</p>" +
+    "<p><strong>Wastage:</strong> " + wastage + "%</p>" +
+    "<h3>Total Bricks Required: " + totalBricks.toLocaleString("en-IN") + " pieces</h3>" +
+    "<p><strong>Estimated Wet Mortar Volume:</strong> " + mortarVolume.toFixed(3) + " m³</p>" +
     "<p><strong>Brick Size:</strong> 190 × 90 × 90 mm</p>" +
-    "<p><strong>Mortar Joint:</strong> " +
-    joint + " mm</p>";
-
+    "<p><strong>Mortar Joint:</strong> " + joint + " mm</p>";
   result.style.display = "block";
 }
 </script>
