@@ -169,7 +169,7 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
         factor > 2 || ratio.length !== 3 || ratio.some(n => !Number.isFinite(n) || n <= 0)
     ) {
         result.style.display = "block";
-        result.innerHTML = "<strong>Please enter valid positive dimensions and factor.</strong>";
+        result.textContent = "Please enter valid positive dimensions and factor.";
         return;
     }
 
@@ -186,18 +186,16 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
     const cubicFeet = wetVolume * 35.3147;
 
     result.style.display = "block";
-    result.innerHTML = `
-        <h3>Calculation Results</h3>
-        <strong>Wet Concrete Volume:</strong> ${wetVolume.toFixed(3)} m³<br>
-        <strong>Concrete Volume:</strong> ${cubicFeet.toFixed(2)} ft³<br>
-        <hr>
-        <strong>Estimated Cement:</strong> ${cementBags.toFixed(2)} bags (50 kg each)<br>
-        <strong>Estimated Sand:</strong> ${sandVolume.toFixed(3)} m³<br>
-        <strong>Estimated Aggregate:</strong> ${aggregateVolume.toFixed(3)} m³<br>
-        <hr>
-        <strong>Mix Ratio:</strong> ${ratio.join(" : ")}<br>
-        <strong>Dry Volume:</strong> ${dryVolume.toFixed(3)} m³
-    `;
+    result.textContent = [
+        "Calculation Results",
+        "Wet Concrete Volume: " + wetVolume.toFixed(3) + " m³",
+        "Concrete Volume: " + cubicFeet.toFixed(2) + " ft³",
+        "Estimated Cement: " + cementBags.toFixed(2) + " bags (50 kg each)",
+        "Estimated Sand: " + sandVolume.toFixed(3) + " m³",
+        "Estimated Aggregate: " + aggregateVolume.toFixed(3) + " m³",
+        "Mix Ratio: " + ratio.join(" : "),
+        "Dry Volume: " + dryVolume.toFixed(3) + " m³"
+    ].join("\\n");
 }
 
 
@@ -357,10 +355,8 @@ function steelCalculate() {
 
     if (resultBox) {
         resultBox.style.display = 'block';
-        resultBox.innerHTML = `
-            <h3 style="color: #087f5b; margin-top: 12px; text-align: center;">Calculation Result</h3>
-            <p style="font-size: 16px; font-weight: bold; color: #087f5b; text-align: center;">Total Steel Weight: ${weight.toFixed(2)} kg</p>
-        `;
+        document.getElementById('steelOutput').textContent =
+            'Total Steel Weight: ' + weight.toFixed(2) + ' kg';
     }
 }
 </script>
@@ -552,17 +548,18 @@ function brickCalculate() {
   const totalBricks = Math.ceil(baseBricks * (1 + wastage / 100));
   const mortarVolume = Math.max(0, netWallVolume - baseBricks * actualBrickVolume);
 
-  output.innerHTML =
-    "<p><strong>Gross Wall Volume:</strong> " + grossWallVolume.toFixed(3) + " m³</p>" +
-    "<p><strong>Door Openings:</strong> " + doorOpeningVolume.toFixed(3) + " m³</p>" +
-    "<p><strong>Window Openings:</strong> " + windowOpeningVolume.toFixed(3) + " m³</p>" +
-    "<p><strong>Net Wall Volume:</strong> " + netWallVolume.toFixed(3) + " m³</p>" +
-    "<p><strong>Bricks Before Wastage:</strong> " + Math.ceil(baseBricks).toLocaleString("en-IN") + " pieces</p>" +
-    "<p><strong>Wastage:</strong> " + wastage + "%</p>" +
-    "<h3>Total Bricks Required: " + totalBricks.toLocaleString("en-IN") + " pieces</h3>" +
-    "<p><strong>Estimated Wet Mortar Volume:</strong> " + mortarVolume.toFixed(3) + " m³</p>" +
-    "<p><strong>Brick Size:</strong> 190 × 90 × 90 mm</p>" +
-    "<p><strong>Mortar Joint:</strong> " + joint + " mm</p>";
+  output.textContent = [
+    "Gross Wall Volume: " + grossWallVolume.toFixed(3) + " m³",
+    "Door Openings: " + doorOpeningVolume.toFixed(3) + " m³",
+    "Window Openings: " + windowOpeningVolume.toFixed(3) + " m³",
+    "Net Wall Volume: " + netWallVolume.toFixed(3) + " m³",
+    "Bricks Before Wastage: " + Math.ceil(baseBricks).toLocaleString("en-IN") + " pieces",
+    "Wastage: " + wastage + "%",
+    "Total Bricks Required: " + totalBricks.toLocaleString("en-IN") + " pieces",
+    "Estimated Wet Mortar Volume: " + mortarVolume.toFixed(3) + " m³",
+    "Brick Size: 190 × 90 × 90 mm",
+    "Mortar Joint: " + joint + " mm"
+  ].join("\\n");
   result.style.display = "block";
 }
 </script>
@@ -940,26 +937,57 @@ function boqAddRow() {
   const tbody = document.getElementById("boqRows");
   const row = document.createElement("tr");
 
-  row.innerHTML = `
-    <td><input class="boq-desc" type="text" aria-label="Work description" placeholder="Work description"></td>
-    <td><input class="boq-qty" type="number" aria-label="Quantity" min="0" step="any" value="1"></td>
-    <td>
-      <select class="boq-unit" aria-label="Measurement unit">
-        <option>m³</option>
-        <option>m²</option>
-        <option>m</option>
-        <option>kg</option>
-        <option>tonne</option>
-        <option>Nos</option>
-        <option>LS</option>
-      </select>
-    </td>
-    <td><input class="boq-rate" type="number" aria-label="Rate" min="0" step="any" value="0"></td>
-    <td class="boq-amount">0.00</td>
-    <td class="boq-no-print">
-      <button type="button" class="remove-boq" onclick="boqRemoveRow(this)">Remove</button>
-    </td>
-  `;
+  const addCell = (className, child) => {
+    const cell = document.createElement("td");
+    if (className) cell.className = className;
+    if (child) cell.appendChild(child);
+    return cell;
+  };
+  const addInput = (className, type, label, value, placeholder) => {
+    const input = document.createElement("input");
+    input.className = className;
+    input.type = type;
+    input.setAttribute("aria-label", label);
+    if (type === "number") {
+      input.min = "0";
+      input.step = "any";
+    }
+    if (value !== undefined) input.value = value;
+    if (placeholder) input.placeholder = placeholder;
+    return input;
+  };
+
+  const description = addInput("boq-desc", "text", "Work description", "", "Work description");
+  const quantity = addInput("boq-qty", "number", "Quantity", "1");
+  const rate = addInput("boq-rate", "number", "Rate", "0");
+  const unit = document.createElement("select");
+  unit.className = "boq-unit";
+  unit.setAttribute("aria-label", "Measurement unit");
+  ["m³", "m²", "m", "kg", "tonne", "Nos", "LS"].forEach((label) => {
+    const option = document.createElement("option");
+    option.textContent = label;
+    option.value = label;
+    unit.appendChild(option);
+  });
+
+  const amount = document.createElement("td");
+  amount.className = "boq-amount";
+  amount.textContent = "0.00";
+  const removeCell = document.createElement("td");
+  removeCell.className = "boq-no-print";
+  const removeButton = document.createElement("button");
+  removeButton.type = "button";
+  removeButton.className = "remove-boq";
+  removeButton.textContent = "Remove";
+  removeButton.addEventListener("click", () => boqRemoveRow(removeButton));
+  removeCell.appendChild(removeButton);
+
+  row.appendChild(addCell("", description));
+  row.appendChild(addCell("", quantity));
+  row.appendChild(addCell("", unit));
+  row.appendChild(addCell("", rate));
+  row.appendChild(amount);
+  row.appendChild(removeCell);
 
   tbody.appendChild(row);
   boqCalculate();
