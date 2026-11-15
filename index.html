@@ -169,6 +169,7 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
         factor > 2 || ratio.length !== 3 || ratio.some(n => !Number.isFinite(n) || n <= 0)
     ) {
         result.style.display = "block";
+        result.style.whiteSpace = "pre-line";
         result.textContent = "Please enter valid positive dimensions and factor.";
         return;
     }
@@ -186,6 +187,7 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
     const cubicFeet = wetVolume * 35.3147;
 
     result.style.display = "block";
+    result.style.whiteSpace = "pre-line";
     result.textContent = [
         "Calculation Results",
         "Wet Concrete Volume: " + wetVolume.toFixed(3) + " m³",
@@ -355,6 +357,7 @@ function steelCalculate() {
 
     if (resultBox) {
         resultBox.style.display = 'block';
+        document.getElementById('steelOutput').style.whiteSpace = "pre-line";
         document.getElementById('steelOutput').textContent =
             'Total Steel Weight: ' + weight.toFixed(2) + ' kg';
     }
@@ -548,6 +551,7 @@ function brickCalculate() {
   const totalBricks = Math.ceil(baseBricks * (1 + wastage / 100));
   const mortarVolume = Math.max(0, netWallVolume - baseBricks * actualBrickVolume);
 
+  output.style.whiteSpace = "pre-line";
   output.textContent = [
     "Gross Wall Volume: " + grossWallVolume.toFixed(3) + " m³",
     "Door Openings: " + doorOpeningVolume.toFixed(3) + " m³",
