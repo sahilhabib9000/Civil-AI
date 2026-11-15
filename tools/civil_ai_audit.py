@@ -57,7 +57,12 @@ class AuditParser(HTMLParser):
 
         if tag in ("input", "select", "textarea"):
             if attrs.get("type", "").lower() != "hidden":
-                self.inputs.append({"id": element_id, "type": tag})
+                self.inputs.append({
+                    "id": element_id,
+                    "type": tag,
+                    "aria_label": (attrs.get("aria-label") or "").strip(),
+                    "aria_labelledby": (attrs.get("aria-labelledby") or "").strip(),
+                })
 
         if tag == "label" and attrs.get("for"):
             self.labels_for.add(attrs["for"])
@@ -113,9 +118,15 @@ def audit(path):
 
     missing_labels = sorted(
         item["id"] for item in parser.inputs
-        if item["id"] and item["id"] not in parser.labels_for
+        if item["id"]
+        and item["id"] not in parser.labels_for
+        and not item.get("aria_label")
+        and not item.get("aria_labelledby")
     )
-    unlabeled_inputs = sum(1 for item in parser.inputs if not item["id"])
+    unlabeled_inputs = sum(
+        1 for item in parser.inputs
+        if not item["id"] and not item.get("aria_label") and not item.get("aria_labelledby")
+    )
 
     errors = []
     warnings = []
