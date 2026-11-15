@@ -31,22 +31,22 @@ const base = {
 {
   const e = run(base);
   assert.equal(e.brickError.textContent, "");
-  assert.match(e.brickOutput.innerHTML, /Gross Wall Volume:<\/strong> 2\.070 m³/);
-  assert.match(e.brickOutput.innerHTML, /Net Wall Volume:<\/strong> 2\.070 m³/);
-  assert.match(e.brickOutput.innerHTML, /Total Bricks Required: 1,087 pieces/);
+  assert.match(e.brickOutput.textContent, /Gross Wall Volume:<\/strong> 2\.070 m³/);
+  assert.match(e.brickOutput.textContent, /Net Wall Volume:<\/strong> 2\.070 m³/);
+  assert.match(e.brickOutput.textContent, /Total Bricks Required: 1,087 pieces/);
 }
 {
   const e = run({ ...base, brickDoorCount: 1, brickDoorWidth: 0.9, brickDoorHeight: 2.1,
     brickWindowCount: 1, brickWindowWidth: 1.2, brickWindowHeight: 1.2 });
   assert.equal(e.brickError.textContent, "");
-  assert.match(e.brickOutput.innerHTML, /Door Openings:<\/strong> 0\.435 m³/);
-  assert.match(e.brickOutput.innerHTML, /Window Openings:<\/strong> 0\.331 m³/);
-  assert.match(e.brickOutput.innerHTML, /Net Wall Volume:<\/strong> 1\.304 m³/);
+  assert.match(e.brickOutput.textContent, /Door Openings:<\/strong> 0\.435 m³/);
+  assert.match(e.brickOutput.textContent, /Window Openings:<\/strong> 0\.331 m³/);
+  assert.match(e.brickOutput.textContent, /Net Wall Volume:<\/strong> 1\.304 m³/);
 }
 {
   const e = run({ ...base, brickUnit: "ft", brickLength: 10, brickHeight: 10, brickThickness: 1 });
   assert.equal(e.brickError.textContent, "");
-  assert.match(e.brickOutput.innerHTML, /Gross Wall Volume:<\/strong> 2\.832 m³/);
+  assert.match(e.brickOutput.textContent, /Gross Wall Volume:<\/strong> 2\.832 m³/);
 }
 {
   const e = run({ ...base, brickDoorCount: 1, brickDoorWidth: 4, brickDoorHeight: 2 });
