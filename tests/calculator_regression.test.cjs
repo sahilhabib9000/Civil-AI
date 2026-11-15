@@ -130,4 +130,4 @@ function runBoq({ qty, rate, gst }) {
   assert.equal(elements.boqGrandTotal.textContent, "");
 }
 
-console.log("PASS: 8 concrete, steel and BOQ regression tests");
+console.log("PASS: 9 concrete, steel and BOQ regression scenarios");
