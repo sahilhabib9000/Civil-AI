@@ -535,6 +535,14 @@ function brickCalculate() {
     return;
   }
 
+  if (
+    (doorCount > 0 && (doorWidth * conversion > wallLength || doorHeight * conversion > wallHeight)) ||
+    (windowCount > 0 && (windowWidth * conversion > wallLength || windowHeight * conversion > wallHeight))
+  ) {
+    error.textContent = "Each door or window must fit within the wall length and height.";
+    return;
+  }
+
   const netWallVolume = grossWallVolume - totalOpeningVolume;
   const brickL = 0.190, brickW = 0.090, brickH = 0.090;
   const jointMetres = joint / 1000;
