@@ -3,6 +3,13 @@ name: CIVIL AI Read-only Audit
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "guardian.html"
+      - "tools/civil_ai_audit.py"
+      - ".github/workflows/civil-ai-audit.yml"
   workflow_dispatch:
 
 permissions:
@@ -10,7 +17,7 @@ permissions:
 
 jobs:
   static-audit:
-    name: Static HTML checks
+    name: Expanded static source checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
