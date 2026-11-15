@@ -10,6 +10,8 @@ on:
       - "guardian.html"
       - "tools/civil_ai_audit.py"
       - "tests/brick_calculator.test.cjs"
+      - "_headers"
+      - "tools/civil_ai_security_audit.py"
       - ".github/workflows/civil-ai-audit.yml"
   workflow_dispatch:
 
@@ -33,6 +35,17 @@ jobs:
           node-version: "22"
       - name: Run brick calculator regression tests
         run: node tests/brick_calculator.test.cjs
+      - name: Run backend and security baseline audit
+        run: |
+          set -o pipefail
+          python tools/civil_ai_security_audit.py | tee civil-ai-security-report.json
+      - name: Upload backend and security report
+        if: always() && hashFiles('civil-ai-security-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: civil-ai-security-report
+          path: civil-ai-security-report.json
+          if-no-files-found: ignore
       - name: Run read-only audit and save report
         run: |
           set -o pipefail
