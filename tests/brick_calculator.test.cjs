@@ -15,8 +15,9 @@ function run(values) {
     elements[id] ||= { value: "", textContent: "", innerHTML: "", style: { display: "none" } };
   }
   const document = { getElementById: (id) => elements[id] };
-  vm.runInNewContext(match[1], { document, Math, Number });
-  vm.runInNewContext("brickCalculate()", { document, Math, Number });
+  const context = vm.createContext({ document, Math, Number });
+  vm.runInContext(match[1], context);
+  vm.runInContext("brickCalculate()", context);
   return elements;
 }
 
