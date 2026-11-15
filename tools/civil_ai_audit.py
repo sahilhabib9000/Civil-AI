@@ -42,10 +42,11 @@ class AuditParser(HTMLParser):
                 self.anchors_without_href += 1
             else:
                 parsed = urlsplit(href)
-                if parsed.fragment:
-                    self.fragments.append(parsed.fragment)
-                if not parsed.scheme and not parsed.netloc and parsed.path:
-                    self.local_links.append(parsed.path)
+                if not parsed.scheme and not parsed.netloc:
+                    if parsed.fragment:
+                        self.fragments.append(parsed.fragment)
+                    if parsed.path:
+                        self.local_links.append(parsed.path)
             if attrs.get("target") == "_blank":
                 rel = set((attrs.get("rel") or "").lower().split())
                 if not {"noopener", "noreferrer"}.intersection(rel):
