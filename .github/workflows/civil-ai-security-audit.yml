@@ -1,0 +1,52 @@
+name: CIVIL AI Backend and Security Baseline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "guardian.html"
+      - "wrangler.toml"
+      - "_headers"
+      - "tools/civil_ai_security_audit.py"
+      - ".github/workflows/civil-ai-security-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-baseline:
+    name: Read-only backend and security checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run security baseline audit
+        run: |
+          set -o pipefail
+          python tools/civil_ai_security_audit.py | tee civil-ai-security-report.json
+      - name: Publish report summary
+        if: always()
+        run: |
+          echo "## CIVIL AI Backend and Security Baseline" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f civil-ai-security-report.json ]; then
+            echo ' ```json' >> "$GITHUB_STEP_SUMMARY"
+            cat civil-ai-security-report.json >> "$GITHUB_STEP_SUMMARY"
+            echo ' ```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Audit did not produce a report. Review the job logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload security report
+        if: always() && hashFiles('civil-ai-security-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: civil-ai-security-report
+          path: civil-ai-security-report.json
+          if-no-files-found: ignore
