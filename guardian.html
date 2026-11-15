@@ -148,7 +148,7 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
       <h1>Company Guardian</h1>
       <div class="sub">Central control room for the CIVIL AI platform</div>
     </div>
-    <div class="status">● DASHBOARD READY</div>
+    <div class="status">● DASHBOARD UI · PARTIALLY CONNECTED</div>
   </div>
 
   <section id="overview">
@@ -159,7 +159,7 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
 
     <div class="grid">
       <div class="card"><div class="metric-label">AI AGENT ROLES</div><div class="metric-value">8</div><div class="metric-note">Planned specialist roles</div></div>
-      <div class="card"><div class="metric-label">BUGS DETECTED</div><div class="metric-value">—</div><div class="metric-note">GitHub scan not connected</div></div>
+      <div class="card"><div class="metric-label">LATEST SOURCE AUDIT</div><div class="metric-value">PASS</div><div class="metric-note">Latest verified report: 0 warnings, 0 errors</div></div>
       <div class="card"><div class="metric-label">SYSTEM HEALTH</div><div class="metric-value">—</div><div class="metric-note">Live monitoring pending</div></div>
       <div class="card"><div class="metric-label">APPROVAL QUEUE</div><div class="metric-value">—</div><div class="metric-note">Approval integration pending</div></div>
     </div>
@@ -175,11 +175,10 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
       </div>
       <div class="card">
         <h3 class="section-title" style="margin-top:0">Recent Activity</h3>
-        <div class="activity"><span class="dot"></span>Guardian dashboard file created</div>
-        <div class="activity"><span class="dot"></span>GitHub integration pending</div>
-        <div class="activity"><span class="dot"></span>Automated testing pending</div>
-        <div class="activity"><span class="dot"></span>Cloudflare connection pending</div>
-        <div class="activity"><span class="dot"></span>Premium monitoring pending</div>
+        <div class="activity"><span class="dot"></span>Expanded static source audit merged into main</div>
+        <div class="activity"><span class="dot"></span>Latest static audit: PASS · 0 warnings · 0 errors</div>
+        <div class="activity"><span class="dot"></span>Bug Fixer: read-only scan and issue reporting enabled</div>
+        <div class="activity"><span class="dot"></span>Live backend, security and payment monitoring: not connected</div>
       </div>
     </div>
   </section>
@@ -193,8 +192,8 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
     <h2 class="section-title">Full Company Audit</h2>
     <div class="card">
       <h3>Platform-wide audit</h3>
-      <p class="sub">The audit will inspect website pages, tools, integrations, workflows, security and incomplete features after the required connections are configured.</p>
-      <button class="action primary" onclick="pending('Full Company Audit')">Start Full Audit</button>
+      <p class="sub">Run the expanded read-only source audit in GitHub Actions. It checks HTML IDs, internal links, local files, JavaScript element references and basic accessibility indicators. It does not yet test live APIs, calculator formulas, authentication, payments or firewall protection.</p>
+      <a class="action primary" href="https://github.com/sahilhabib9000/Civil-AI/actions/workflows/civil-ai-audit.yml" target="_blank" rel="noopener noreferrer">Run / View Static Audit ↗</a>
     </div>
   </section>
 
@@ -221,8 +220,7 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
   <section id="premium" hidden>
     <h2 class="section-title">Premium & Finance Monitor</h2>
     <div class="card">
-      <p class="sub">Planned monitoring for payment verification, Premium login, subscription access and billing events.</p>
-      <button class="action" onclick="pending('Premium Monitoring')">Configure Premium Monitor</button>
+      <p class="sub">Payment verification, Premium login, subscription access and billing monitoring are not connected yet. Premium access must remain disabled until secure payment verification and server-side entitlement checks are implemented and tested.</p>
     </div>
   </section>
 
@@ -232,10 +230,10 @@ footer{color:var(--muted);font-size:10px;margin-top:28px}
       <p class="sub">The read-only HTML audit runs in GitHub Actions after commits to the main branch. Open the latest run to view its summary and download the JSON report artifact.</p>
       <a class="action" href="https://github.com/sahilhabib9000/Civil-AI/actions/workflows/civil-ai-audit.yml" target="_blank" rel="noopener noreferrer">View Audit Runs & Reports ↗</a>
     </div>
-    <div class="notice">Current coverage: duplicate HTML IDs and broken internal anchor links in index.html and guardian.html. This is not yet a full security, backend, calculator or payment audit.</div>
+    <div class="notice">Current coverage: expanded static source checks in index.html and guardian.html, including duplicate IDs, internal links, local files, JavaScript element references, accessibility indicators and external-link safety. This is not a live browser test and does not verify calculator formulas, API/backend behavior, authentication, payment processing or firewall effectiveness.</div>
   </section>
 
-  <footer>CIVIL AI COMPANY GUARDIAN · OWNER CONTROLLED · VERSION 1.0 UI FOUNDATION</footer>
+  <footer>CIVIL AI COMPANY GUARDIAN · OWNER CONTROLLED · STATIC AUDIT CONNECTED · LIVE MONITORING IN DEVELOPMENT</footer>
 </main>
 </div>
 <div id="toast"></div>
@@ -260,13 +258,6 @@ function showSection(id,btn){
  document.getElementById(id).hidden=false;
  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
  btn.classList.add("active");
-}
-function pending(name){
- const t=document.getElementById("toast");
- t.textContent=name+": integration is not connected yet. This dashboard is currently the UI foundation.";
- t.style.display="block";
- clearTimeout(window.toastTimer);
- window.toastTimer=setTimeout(()=>t.style.display="none",4500);
 }
 </script>
 </body>
