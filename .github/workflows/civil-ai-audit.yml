@@ -35,6 +35,8 @@ jobs:
           node-version: "22"
       - name: Run brick calculator regression tests
         run: node tests/brick_calculator.test.cjs
+      - name: Run DOM and XSS regression guards
+        run: node tests/dom_xss_regression.test.cjs
       - name: Run backend and security baseline audit
         run: |
           set -o pipefail
