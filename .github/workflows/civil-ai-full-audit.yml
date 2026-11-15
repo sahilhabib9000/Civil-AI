@@ -1,0 +1,59 @@
+name: CIVIL AI Full Company Audit - Phase 1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/civil_ai_full_audit.py"
+      - "index.html"
+      - "guardian.html"
+      - "wrangler.toml"
+      - "tests/**"
+      - ".github/workflows/civil-ai-full-audit.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "tools/civil_ai_full_audit.py"
+      - "index.html"
+      - "guardian.html"
+      - "wrangler.toml"
+      - "tests/**"
+      - ".github/workflows/civil-ai-full-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-company-audit:
+    name: Read-only company feature-gap audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run full company audit
+        run: |
+          set -o pipefail
+          python tools/civil_ai_full_audit.py | tee civil-ai-full-company-audit.json
+      - name: Publish report summary
+        if: always()
+        run: |
+          echo "## CIVIL AI Full Company Audit - Phase 1" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f civil-ai-full-company-audit.json ]; then
+            echo ' ```json' >> "$GITHUB_STEP_SUMMARY"
+            cat civil-ai-full-company-audit.json >> "$GITHUB_STEP_SUMMARY"
+            echo ' ```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Audit did not produce a report. Review logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload full company audit report
+        if: always() && hashFiles('civil-ai-full-company-audit.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: civil-ai-full-company-audit-report
+          path: civil-ai-full-company-audit.json
+          if-no-files-found: ignore
