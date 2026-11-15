@@ -259,13 +259,6 @@ function showSection(id,btn){
  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
  btn.classList.add("active");
 }
-function pending(name){
- const t=document.getElementById("toast");
- t.textContent=name+": integration is not connected yet. This dashboard is currently the UI foundation.";
- t.style.display="block";
- clearTimeout(window.toastTimer);
- window.toastTimer=setTimeout(()=>t.style.display="none",4500);
-}
 </script>
 </body>
 </html>
