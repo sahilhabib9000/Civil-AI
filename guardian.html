@@ -249,9 +249,23 @@ const agents = [
  ["▦","Engineering Agent","Civil engineering assistance"],
  ["⌕","Research Agent","Standards and technology research"]
 ];
-document.getElementById("agentCards").innerHTML = agents.map(a =>
- `<div class="module"><div class="ico">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p><span class="pending">NOT CONNECTED</span></div>`
-).join("");
+const agentCards = document.getElementById("agentCards");
+agents.forEach(([icon, name, description]) => {
+ const card = document.createElement("div");
+ card.className = "module";
+ const iconElement = document.createElement("div");
+ iconElement.className = "ico";
+ iconElement.textContent = icon;
+ const heading = document.createElement("h3");
+ heading.textContent = name;
+ const details = document.createElement("p");
+ details.textContent = description;
+ const status = document.createElement("span");
+ status.className = "pending";
+ status.textContent = "NOT CONNECTED";
+ card.append(iconElement, heading, details, status);
+ agentCards.appendChild(card);
+});
 
 function showSection(id,btn){
  document.querySelectorAll("main section").forEach(s=>s.hidden=true);
