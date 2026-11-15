@@ -10,6 +10,7 @@ on:
       - "guardian.html"
       - "tools/civil_ai_audit.py"
       - "tests/brick_calculator.test.cjs"
+      - "tests/dom_xss_regression.test.cjs"
       - "_headers"
       - "tools/civil_ai_security_audit.py"
       - ".github/workflows/civil-ai-audit.yml"
