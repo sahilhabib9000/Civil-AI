@@ -143,11 +143,12 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
   <button type="button" onclick="ccCalculate()">Calculate Materials</button>
 
   <div class="result" id="cc-result" aria-live="polite"></div>
-  <p class="note">
-    Note: Results are estimates based on the selected nominal mix ratio
-    and dry volume factor. Actual material requirements depend on mix
-    design, moisture, wastage and site conditions. This is not a structural
-    design approval.
+  <p class="note" role="note">
+    <strong>Engineering limitation:</strong> This is a nominal-mix quantity estimate only,
+    using the selected ratio and dry-volume factor. It is not an IS-code laboratory mix design
+    and does not account for all aggregate moisture, absorption, bulking or batch corrections.
+    Confirm the mix design and material quantities with a qualified concrete engineer before
+    construction. This calculator does not provide structural design approval.
   </p>
 </section>
 
@@ -274,7 +275,10 @@ footer{text-align:center;padding:30px;color:#94a3b8;border-top:1px solid #263449
 
 <section id="steel-calculator" class="steel-calculator">
   <h2>Steel Weight Calculator</h2>
-  <p>Calculate reinforcement steel weight easily.</p>
+  <p>Estimate theoretical reinforcement bar mass from diameter and length.</p>
+  <p class="note" role="note"><strong>Engineering limitation:</strong> The result is theoretical bar weight only.
+  It excludes cutting-length rules, hooks, bends, laps, couplers and wastage. Do not use it as a
+  Bar Bending Schedule (BBS) or procurement quantity without a separately verified take-off.</p>
 
   
     <!-- START STEEL CALCULATOR CARD -->
@@ -359,7 +363,7 @@ function steelCalculate() {
         resultBox.style.display = 'block';
         document.getElementById('steelOutput').style.whiteSpace = "pre-line";
         document.getElementById('steelOutput').textContent =
-            'Total Steel Weight: ' + weight.toFixed(2) + ' kg';
+            'Estimated Theoretical Steel Weight: ' + weight.toFixed(2) + ' kg';
     }
 }
 </script>
@@ -429,7 +433,11 @@ function steelCalculate() {
 
 <section id="brick-calculator" class="brick-calculator">
   <h2>Brick Calculator</h2>
-  <p>Estimate bricks and mortar for your wall, excluding door and window openings.</p>
+  <p>Estimate bricks and mortar after deducting door and window openings.</p>
+  <p class="note" role="note"><strong>Opening limitation:</strong> All door and window openings are assumed
+  to be rectangular and non-overlapping. This calculator uses shared opening dimensions for each
+  opening type and does not record opening positions, so it cannot detect overlaps. Check the
+  wall drawing and ensure openings do not overlap before relying on the estimate.</p>
 
   <label for="brickLength">Wall Length</label>
   <input type="number" id="brickLength" min="0.001" step="any" placeholder="Enter wall length">
