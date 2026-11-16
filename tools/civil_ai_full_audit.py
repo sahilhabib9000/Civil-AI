@@ -78,9 +78,13 @@ if "function boqPrint()" in index:
                 "boqPrint() calls boqCalculate() and then window.print(); boqCalculate() currently signals invalid GST/quantity/rate with alert and return, but does not return a success flag to stop printing.",
                 "Make boqCalculate return true/false and call window.print() only when validation succeeds.")
 
+coverage["brick_opening_overlap_disclosure"] = bool(re.search(
+    r"Opening limitation:[\\s\\S]*non-overlapping[\\s\\S]*does not record opening positions",
+    index, re.I
+))
 if "function brickCalculate()" in index:
     brick_fn = index.split("function brickCalculate()", 1)[1].split("</script>", 1)[0]
-    if "doorCount * doorWidth" in brick_fn and "windowCount * windowWidth" in brick_fn:
+    if "doorCount * doorWidth" in brick_fn and "windowCount * windowWidth" in brick_fn and not coverage["brick_opening_overlap_disclosure"]:
         finding("BRICK-001", "medium", "Brick calculator", "Opening deduction assumes openings do not overlap",
                 "The calculator multiplies count by one shared width/height and subtracts total opening volume. It does not accept opening positions, so overlapping door/window openings cannot be detected.",
                 "Clearly state that openings must be non-overlapping, or add per-opening dimensions/positions and overlap validation.")
@@ -90,7 +94,11 @@ if "function ccCalculate" in index and "nominal mix ratio" in index.lower():
             "The calculator uses preset nominal ratios and a dry-volume factor. It does not perform a laboratory/IS mix-design calculation or account for all material corrections.",
             "Keep the limitation visible and add a separate validated mix-design workflow only after engineering review.")
 
-if "function steelCalculate" in index and "Math.pow(dia, 2) / 162.2" in index:
+coverage["steel_theoretical_weight_disclosure"] = bool(re.search(
+    r"Estimated Theoretical Steel Weight[\\s\\S]*theoretical bar weight only[\\s\\S]*hooks, bends, laps, couplers and wastage",
+    index, re.I
+))
+if "function steelCalculate" in index and "Math.pow(dia, 2) / 162.2" in index and not coverage["steel_theoretical_weight_disclosure"]:
     finding("STEEL-001", "medium", "Steel calculator", "Steel output is a theoretical bar-weight estimate",
             "The dia²/162.2 formula estimates nominal mass per length. It does not include cutting length, hooks, bends, laps, couplers or wastage.",
             "Label the output as theoretical weight and add a separate bar-bending schedule workflow with verified rules.")
