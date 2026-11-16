@@ -1031,7 +1031,7 @@ function boqCalculate() {
 
   if (!Number.isFinite(gst) || gst < 0 || gst > 100) {
     alert("Enter a valid tax percentage between 0 and 100.");
-    return;
+    return false;
   }
 
   let subtotal = 0;
@@ -1043,7 +1043,7 @@ function boqCalculate() {
     if (!Number.isFinite(qty) || qty < 0 ||
         !Number.isFinite(rate) || rate < 0) {
       alert("Quantity and rate must be valid non-negative numbers.");
-      return;
+      return false;
     }
 
     const amount = qty * rate;
@@ -1061,11 +1061,13 @@ function boqCalculate() {
     "₹" + taxAmount.toFixed(2);
   document.getElementById("boqGrandTotal").textContent =
     "₹" + grandTotal.toFixed(2);
+  return true;
 }
 
 function boqPrint() {
-  boqCalculate();
+  if (!boqCalculate()) return false;
   window.print();
+  return true;
 }
 
 document.addEventListener("input", function(event) {

@@ -19,6 +19,7 @@ guardian = read("guardian.html")
 wrangler = read("wrangler.toml")
 tests = {
     "brick_regression": read("tests/brick_calculator.test.cjs"),
+    "calculator_regression": read("tests/calculator_regression.test.cjs"),
     "dom_xss_regression": read("tests/dom_xss_regression.test.cjs"),
 }
 workflows = {

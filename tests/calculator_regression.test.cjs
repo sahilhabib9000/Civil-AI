@@ -87,8 +87,14 @@ const steelFn = extractFunction("steelCalculate");
 }
 
 const boqFn = extractFunction("boqCalculate", "boqPrint");
-function runBoq({ qty, rate, gst }) {
+const boqPrintStart = html.indexOf("function boqPrint()");
+const boqPrintEnd = html.indexOf("document.addEventListener", boqPrintStart);
+assert.notEqual(boqPrintStart, -1, "boqPrint must exist in index.html");
+assert.notEqual(boqPrintEnd, -1, "Could not find end of boqPrint");
+const boqPrintFn = html.slice(boqPrintStart, boqPrintEnd).trim();
+function runBoq({ qty, rate, gst, print = false }) {
   const alerts = [];
+  const printCalls = [];
   const row = {
     querySelector(selector) {
       if (selector === ".boq-qty") return { value: String(qty) };
@@ -107,27 +113,44 @@ function runBoq({ qty, rate, gst }) {
     getElementById: id => elements[id],
     querySelectorAll: selector => selector === "#boqRows tr" ? [row] : []
   };
-  const context = vm.createContext({ document, Number, alert: message => alerts.push(message) });
-  vm.runInContext(boqFn, context);
-  vm.runInContext("boqCalculate()", context);
-  return { elements, alerts };
+  const context = vm.createContext({
+    document, Number, alert: message => alerts.push(message),
+    window: { print: () => printCalls.push("printed") }
+  });
+  vm.runInContext(boqFn + "\n" + boqPrintFn, context);
+  const calculationResult = vm.runInContext(print ? "boqPrint()" : "boqCalculate()", context);
+  return { elements, alerts, printCalls, calculationResult };
 }
 {
-  const { elements, alerts } = runBoq({ qty: 10, rate: 500, gst: 18 });
+  const { elements, alerts, calculationResult } = runBoq({ qty: 10, rate: 500, gst: 18 });
   assert.deepEqual(alerts, []);
+  assert.equal(calculationResult, true);
   assert.equal(elements.boqSubtotal.textContent, "₹5000.00");
   assert.equal(elements.boqTax.textContent, "₹900.00");
   assert.equal(elements.boqGrandTotal.textContent, "₹5900.00");
 }
 {
-  const { elements, alerts } = runBoq({ qty: -1, rate: 500, gst: 18 });
+  const { elements, alerts, calculationResult } = runBoq({ qty: -1, rate: 500, gst: 18 });
   assert.match(alerts[0], /non-negative numbers/);
+  assert.equal(calculationResult, false);
   assert.equal(elements.boqGrandTotal.textContent, "");
 }
 {
-  const { elements, alerts } = runBoq({ qty: 10, rate: 500, gst: 101 });
+  const { elements, alerts, calculationResult } = runBoq({ qty: 10, rate: 500, gst: 101 });
   assert.match(alerts[0], /tax percentage between 0 and 100/);
+  assert.equal(calculationResult, false);
   assert.equal(elements.boqGrandTotal.textContent, "");
 }
 
-console.log("PASS: 9 concrete, steel and BOQ regression scenarios");
+{
+  const { printCalls, calculationResult } = runBoq({ qty: 10, rate: 500, gst: 18, print: true });
+  assert.equal(calculationResult, true);
+  assert.deepEqual(printCalls, ["printed"]);
+}
+{
+  const { alerts, printCalls, calculationResult } = runBoq({ qty: -1, rate: 500, gst: 18, print: true });
+  assert.equal(calculationResult, false);
+  assert.match(alerts[0], /non-negative numbers/);
+  assert.deepEqual(printCalls, [], "Invalid BOQ must never open the print dialog");
+}
+console.log("PASS: 11 concrete, steel and BOQ regression scenarios");
