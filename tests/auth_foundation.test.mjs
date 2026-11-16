@@ -1,4 +1,5 @@
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { handleAuthRequest, getSessionUser, requirePremium } from "../worker/auth.js";
 
@@ -42,8 +43,7 @@ test("session and Premium checks deny access without a configured database", asy
 });
 
 test("migration includes unique users, hashed sessions and entitlement records", () => {
-  const fs = require("node:fs");
-  const sql = fs.readFileSync("migrations/0001_auth_entitlements.sql", "utf8");
+  const sql = readFileSync("migrations/0001_auth_entitlements.sql", "utf8");
   assert.match(sql, /email TEXT NOT NULL UNIQUE/);
   assert.match(sql, /token_hash TEXT PRIMARY KEY/);
   assert.match(sql, /premium_entitlements/);
