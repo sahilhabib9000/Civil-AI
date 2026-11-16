@@ -153,4 +153,11 @@ function runBoq({ qty, rate, gst, print = false }) {
   assert.match(alerts[0], /non-negative numbers/);
   assert.deepEqual(printCalls, [], "Invalid BOQ must never open the print dialog");
 }
-console.log("PASS: 11 concrete, steel and BOQ regression scenarios");
+
+{
+  assert.match(html, /Engineering limitation:[\\s\\S]*nominal-mix quantity estimate only/);
+  assert.match(html, /Opening limitation:[\\s\\S]*non-overlapping/);
+  assert.match(html, /Estimated Theoretical Steel Weight/);
+  assert.match(html, /excludes cutting-length rules, hooks, bends, laps, couplers and wastage/);
+}
+console.log("PASS: 11 calculator scenarios plus engineering limitation disclosures");
