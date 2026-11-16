@@ -12,10 +12,31 @@ binding = "AI"
 [previews.ai]
 binding = "AI"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "civil-ai_db"
+database_id = "f4835d5e-adca-4c93-852f-61adf470097a"
+
 [[ratelimits]]
 name = "AI_ASSISTANT_LIMITER"
 namespace_id = "9001"
 
 [ratelimits.simple]
 limit = 10
+period = 60
+
+[[ratelimits]]
+name = "AUTH_REGISTER_LIMITER"
+namespace_id = "9002"
+
+[ratelimits.simple]
+limit = 5
+period = 60
+
+[[ratelimits]]
+name = "AUTH_LOGIN_LIMITER"
+namespace_id = "9003"
+
+[ratelimits.simple]
+limit = 5
 period = 60
