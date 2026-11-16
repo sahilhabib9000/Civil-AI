@@ -14,6 +14,7 @@ on:
     paths:
       - "worker/**"
       - "tests/worker_foundation.test.mjs"
+      - "tests/ai_assistant_api.test.mjs"
       - "wrangler.toml"
       - ".github/workflows/worker-foundation.yml"
   workflow_dispatch:
