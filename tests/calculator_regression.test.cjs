@@ -67,7 +67,7 @@ const steelFn = extractFunction("steelCalculate");
     steelDiameter: 12, steelLength: 12, steelUnit: "m", steelBars: 10,
     steelResult: "", steelError: "", steelOutput: ""
   }, "steelCalculate");
-  assert.match(e.steelOutput.textContent, /Total Steel Weight: 106\.54 kg/);
+  assert.match(e.steelOutput.textContent, /Estimated Theoretical Steel Weight: 106\.54 kg/);
   assert.equal(e.steelResult.style.display, "block");
 }
 {
@@ -83,7 +83,7 @@ const steelFn = extractFunction("steelCalculate");
     steelDiameter: 12, steelLength: 10, steelUnit: "ft", steelBars: 2,
     steelResult: "", steelError: "", steelOutput: ""
   }, "steelCalculate");
-  assert.match(e.steelOutput.textContent, /Total Steel Weight: 5\.41 kg/);
+  assert.match(e.steelOutput.textContent, /Estimated Theoretical Steel Weight: 5\.41 kg/);
 }
 
 const boqFn = extractFunction("boqCalculate", "boqPrint");
