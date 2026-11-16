@@ -723,28 +723,46 @@ function brickCalculate() {
 </style>
 
 <script>
-document.getElementById("aiChatForm").addEventListener("submit", function(e) {
+document.getElementById("aiChatForm").addEventListener("submit", async function(e) {
   e.preventDefault();
-
   const input = document.getElementById("aiQuestion");
   const chat = document.getElementById("aiChatBox");
+  const button = document.getElementById("aiSendBtn");
   const question = input.value.trim();
+  if (!question || button.disabled) return;
 
-  if (!question) return;
+  const addMessage = (className, text) => {
+    const message = document.createElement("div");
+    message.className = "ai-message " + className;
+    message.textContent = text;
+    chat.appendChild(message);
+    chat.scrollTop = chat.scrollHeight;
+    return message;
+  };
 
-  const userMessage = document.createElement("div");
-  userMessage.className = "ai-message ai-user";
-  userMessage.textContent = question;
-  chat.appendChild(userMessage);
-
-  const reply = document.createElement("div");
-  reply.className = "ai-message ai-bot";
-  reply.textContent =
-    "Your question has been received. The secure CIVIL AI connection is not active yet. We will connect the AI backend in the next development step.";
-  chat.appendChild(reply);
-
+  addMessage("ai-user", question);
   input.value = "";
-  chat.scrollTop = chat.scrollHeight;
+  button.disabled = true;
+  button.textContent = "Thinking...";
+  const pending = addMessage("ai-bot", "CIVIL AI is preparing an answer...");
+
+  try {
+    const response = await fetch("https://civil-ai-backend.sahilhabib9000.workers.dev/api/ai/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "AI service is temporarily unavailable.");
+    pending.textContent = data.answer + "\n\n" + (data.disclaimer || "Please verify engineering decisions with a qualified professional.");
+  } catch (error) {
+    pending.textContent = error.message || "Unable to connect to CIVIL AI. Please try again later.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Send ➤";
+    chat.scrollTop = chat.scrollHeight;
+    input.focus();
+  }
 });
 </script>
 <!-- END AI ENGINEERING ASSISTANT -->
