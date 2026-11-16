@@ -39,3 +39,4 @@ jobs:
           test -f worker/index.js
           grep -q '^name = "civil-ai-backend"$' wrangler.toml
           grep -q '^main = "worker/index.js"$' wrangler.toml
+          grep -q '^\[previews\]$' wrangler.toml
