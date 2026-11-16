@@ -19,11 +19,11 @@ test("unknown API routes are not silently accepted", async () => {
   assert.equal(response.status, 501);
 });
 
-test("untrusted browser origins do not receive CORS permission", async () => {
+test("untrusted browser origins are rejected", async () => {
   const response = await worker.fetch(new Request("https://backend.example/api/health", {
     headers: { Origin: "https://attacker.example" }
   }));
-  assert.equal(response.status, 200);
+  assert.equal(response.status, 403);
   assert.equal(response.headers.get("access-control-allow-origin"), null);
 });
 
