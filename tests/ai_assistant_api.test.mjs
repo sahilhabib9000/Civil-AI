@@ -27,7 +27,7 @@ test("valid assistant question invokes Workers AI", async () => {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "application/json" },
     body: JSON.stringify({ question: "How do I estimate concrete volume?" })
-  }), { AI: ai });
+  }), { AI: ai, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.match(body.answer, /qualified engineer/);
@@ -48,7 +48,7 @@ test("empty question is rejected", async () => {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "application/json" },
     body: JSON.stringify({ question: "   " })
-  }), { AI: ai });
+  }), { AI: ai, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 400);
 });
 
@@ -57,7 +57,7 @@ test("oversized question is rejected", async () => {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "application/json" },
     body: JSON.stringify({ question: "x".repeat(4001) })
-  }), { AI: ai });
+  }), { AI: ai, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 413);
 });
 
@@ -66,7 +66,7 @@ test("invalid JSON is rejected", async () => {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "application/json" },
     body: "{bad"
-  }), { AI: ai });
+  }), { AI: ai, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 400);
 });
 
@@ -75,7 +75,7 @@ test("wrong content type is rejected", async () => {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "text/plain" },
     body: "hello"
-  }), { AI: ai });
+  }), { AI: ai, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 415);
 });
 
@@ -84,7 +84,7 @@ test("untrusted origin is rejected", async () => {
     method: "POST",
     headers: { Origin: "https://attacker.example", "Content-Type": "application/json" },
     body: JSON.stringify({ question: "Hello" })
-  }), { AI: ai });
+  }), { AI: ai, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 403);
 });
 
@@ -94,7 +94,7 @@ test("AI runtime errors return a safe service error", async () => {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "application/json" },
     body: JSON.stringify({ question: "Explain rebar." })
-  }), { AI: failingAI });
+  }), { AI: failingAI, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 503);
   assert.doesNotMatch(await response.text(), /private provider detail/);
 });
