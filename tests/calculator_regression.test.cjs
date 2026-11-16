@@ -155,8 +155,8 @@ function runBoq({ qty, rate, gst, print = false }) {
 }
 
 {
-  assert.match(html, /Engineering limitation:[\\s\\S]*nominal-mix quantity estimate only/);
-  assert.match(html, /Opening limitation:[\\s\\S]*non-overlapping/);
+  assert.match(html, /Engineering limitation:[\s\S]*nominal-mix quantity estimate only/);
+  assert.match(html, /Opening limitation:[\s\S]*non-overlapping/);
   assert.match(html, /Estimated Theoretical Steel Weight/);
   assert.match(html, /excludes cutting-length rules, hooks, bends, laps, couplers and wastage/);
 }
