@@ -67,7 +67,7 @@ const steelFn = extractFunction("steelCalculate");
     steelDiameter: 12, steelLength: 12, steelUnit: "m", steelBars: 10,
     steelResult: "", steelError: "", steelOutput: ""
   }, "steelCalculate");
-  assert.match(e.steelOutput.textContent, /Total Steel Weight: 106\.54 kg/);
+  assert.match(e.steelOutput.textContent, /Estimated Theoretical Steel Weight: 106\.54 kg/);
   assert.equal(e.steelResult.style.display, "block");
 }
 {
@@ -83,7 +83,7 @@ const steelFn = extractFunction("steelCalculate");
     steelDiameter: 12, steelLength: 10, steelUnit: "ft", steelBars: 2,
     steelResult: "", steelError: "", steelOutput: ""
   }, "steelCalculate");
-  assert.match(e.steelOutput.textContent, /Total Steel Weight: 5\.41 kg/);
+  assert.match(e.steelOutput.textContent, /Estimated Theoretical Steel Weight: 5\.41 kg/);
 }
 
 const boqFn = extractFunction("boqCalculate", "boqPrint");
@@ -153,4 +153,11 @@ function runBoq({ qty, rate, gst, print = false }) {
   assert.match(alerts[0], /non-negative numbers/);
   assert.deepEqual(printCalls, [], "Invalid BOQ must never open the print dialog");
 }
-console.log("PASS: 11 concrete, steel and BOQ regression scenarios");
+
+{
+  assert.match(html, /Engineering limitation:[\s\S]*nominal-mix quantity estimate only/);
+  assert.match(html, /Opening limitation:[\s\S]*non-overlapping/);
+  assert.match(html, /Estimated Theoretical Steel Weight/);
+  assert.match(html, /excludes cutting-length rules, hooks, bends, laps, couplers and wastage/);
+}
+console.log("PASS: 11 calculator scenarios plus engineering limitation disclosures");
