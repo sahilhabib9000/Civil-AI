@@ -1,0 +1,37 @@
+name: CIVIL AI Worker Foundation Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker/**"
+      - "tests/worker_foundation.test.mjs"
+      - "wrangler.toml"
+      - ".github/workflows/worker-foundation.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "worker/**"
+      - "tests/worker_foundation.test.mjs"
+      - "wrangler.toml"
+      - ".github/workflows/worker-foundation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  worker-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test Worker API foundation
+        run: node --test tests/worker_foundation.test.mjs
+      - name: Verify Wrangler configuration
+        run: |
+          test -f worker/index.js
+          grep -q '^name = "civil-ai-backend"$' wrangler.toml
+          grep -q '^main = "worker/index.js"$' wrangler.toml
