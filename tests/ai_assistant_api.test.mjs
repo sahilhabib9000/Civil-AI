@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import worker from "../worker/index.js";
 
 const origin = "https://civil-ai.pages.dev";
+const allow = { limit: async () => ({ success: true }) };
 const ai = {
   run: async (model, input) => {
     assert.equal(model, "@cf/google/gemma-4-26b-a4b-it");
@@ -14,7 +15,7 @@ const ai = {
 test("health reports AI binding state without exposing secrets", async () => {
   const response = await worker.fetch(new Request("https://backend.example/api/health", {
     headers: { Origin: origin }
-  }), { AI: ai });
+  }), { AI: ai, AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.ai_enabled, true);
@@ -38,7 +39,7 @@ test("missing AI binding returns service unavailable", async () => {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "application/json" },
     body: JSON.stringify({ question: "Explain concrete." })
-  }), {});
+  }), { AI_ASSISTANT_LIMITER: allow });
   assert.equal(response.status, 503);
 });
 
@@ -96,4 +97,17 @@ test("AI runtime errors return a safe service error", async () => {
   }), { AI: failingAI });
   assert.equal(response.status, 503);
   assert.doesNotMatch(await response.text(), /private provider detail/);
+});
+
+test("rate-limited clients receive 429 before AI inference", async () => {
+  let invoked = false;
+  const blockedAI = { run: async () => { invoked = true; return { response: "should not run" }; } };
+  const blockedLimiter = { limit: async () => ({ success: false }) };
+  const response = await worker.fetch(new Request("https://backend.example/api/ai/ask", {
+    method: "POST",
+    headers: { Origin: origin, "Content-Type": "application/json" },
+    body: JSON.stringify({ question: "Explain concrete." })
+  }), { AI: blockedAI, AI_ASSISTANT_LIMITER: blockedLimiter });
+  assert.equal(response.status, 429);
+  assert.equal(invoked, false);
 });
