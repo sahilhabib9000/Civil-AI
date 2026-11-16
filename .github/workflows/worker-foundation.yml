@@ -7,6 +7,8 @@ on:
       - "worker/**"
       - "tests/worker_foundation.test.mjs"
       - "tests/ai_assistant_api.test.mjs"
+      - "tests/auth_foundation.test.mjs"
+      - "migrations/**"
       - "wrangler.toml"
       - ".github/workflows/worker-foundation.yml"
   pull_request:
@@ -32,6 +34,8 @@ jobs:
           node-version: "22"
       - name: Test Worker API foundation
         run: node --test tests/worker_foundation.test.mjs
+      - name: Test authentication foundation
+        run: node --test tests/auth_foundation.test.mjs
       - name: Test AI assistant API
         run: node --test tests/ai_assistant_api.test.mjs
       - name: Verify Wrangler configuration
