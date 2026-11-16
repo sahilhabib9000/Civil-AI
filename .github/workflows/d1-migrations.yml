@@ -1,0 +1,31 @@
+name: Apply CIVIL AI D1 migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production_database:
+        description: "Type APPLY to confirm applying migrations to the configured remote D1 database"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: civil-ai-d1-migrations
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: ${{ inputs.confirm_production_database == 'APPLY' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Apply remote D1 migrations
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply civil-ai_db --remote
