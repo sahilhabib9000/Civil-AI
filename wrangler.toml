@@ -9,3 +9,11 @@ binding = "AI"
 
 [previews.ai]
 binding = "AI"
+
+[[ratelimits]]
+name = "AI_ASSISTANT_LIMITER"
+namespace_id = "9001"
+
+[ratelimits.simple]
+limit = 10
+period = 60
