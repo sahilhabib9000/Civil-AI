@@ -79,7 +79,7 @@ if "function boqPrint()" in index:
                 "Make boqCalculate return true/false and call window.print() only when validation succeeds.")
 
 coverage["brick_opening_overlap_disclosure"] = bool(re.search(
-    r"Opening limitation:[\\s\\S]*non-overlapping[\\s\\S]*does not record opening positions",
+    r"Opening limitation:[\s\S]*non-overlapping[\s\S]*does not record opening positions",
     index, re.I
 ))
 if "function brickCalculate()" in index:
@@ -95,7 +95,7 @@ if "function ccCalculate" in index and "nominal mix ratio" in index.lower():
             "Keep the limitation visible and add a separate validated mix-design workflow only after engineering review.")
 
 coverage["steel_theoretical_weight_disclosure"] = bool(re.search(
-    r"Estimated Theoretical Steel Weight[\\s\\S]*theoretical bar weight only[\\s\\S]*hooks, bends, laps, couplers and wastage",
+    r"Estimated Theoretical Steel Weight[\s\S]*theoretical bar weight only[\s\S]*hooks, bends, laps, couplers and wastage",
     index, re.I
 ))
 if "function steelCalculate" in index and "Math.pow(dia, 2) / 162.2" in index and not coverage["steel_theoretical_weight_disclosure"]:
