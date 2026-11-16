@@ -60,6 +60,18 @@ export default {
     }
 
     if (url.pathname === "/api/ai/ask" && request.method === "POST") {
+      if (!env?.AI_ASSISTANT_LIMITER || typeof env.AI_ASSISTANT_LIMITER.limit !== "function") {
+        return jsonResponse({ error: "AI request protection is not configured." }, 503, origin);
+      }
+      const clientIp = request.headers.get("CF-Connecting-IP") || "unknown-client";
+      try {
+        const rate = await env.AI_ASSISTANT_LIMITER.limit({ key: clientIp });
+        if (!rate.success) {
+          return jsonResponse({ error: "Too many questions. Please wait one minute and try again." }, 429, origin);
+        }
+      } catch {
+        return jsonResponse({ error: "AI request protection is temporarily unavailable." }, 503, origin);
+      }
       if (!env?.AI || typeof env.AI.run !== "function") {
         return jsonResponse({ error: "AI service is not configured yet." }, 503, origin);
       }
