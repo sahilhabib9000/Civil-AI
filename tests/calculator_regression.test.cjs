@@ -117,7 +117,7 @@ function runBoq({ qty, rate, gst, print = false }) {
     document, Number, alert: message => alerts.push(message),
     window: { print: () => printCalls.push("printed") }
   });
-  vm.runInContext(boqFn + "\\n" + boqPrintFn, context);
+  vm.runInContext(boqFn + "\n" + boqPrintFn, context);
   const calculationResult = vm.runInContext(print ? "boqPrint()" : "boqCalculate()", context);
   return { elements, alerts, printCalls, calculationResult };
 }
