@@ -2,6 +2,8 @@
  * CIVIL AI backend.
  * AI answers are informational only; never a substitute for engineering review.
  */
+import { handleAuthRequest } from "./auth.js";
+
 const ALLOWED_ORIGIN = "https://civil-ai.pages.dev";
 const AI_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 const MAX_BODY_BYTES = 16 * 1024;
@@ -16,6 +18,7 @@ function corsHeaders(origin) {
   });
   if (origin === ALLOWED_ORIGIN) {
     headers.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+    headers.set("Access-Control-Allow-Credentials", "true");
   }
   return headers;
 }
@@ -47,6 +50,10 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    }
+
+    if (url.pathname.startsWith("/api/auth/")) {
+      return await handleAuthRequest(request, env, origin);
     }
 
     if (url.pathname === "/api/health" && request.method === "GET") {
