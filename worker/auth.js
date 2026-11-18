@@ -2,6 +2,35 @@ const PBKDF2_ITERATIONS = 210000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const SESSION_COOKIE = "__Host-civilai_session";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VERIFICATION_SECONDS = 86400;
+
+async function sendVerificationEmail(env, email, token) {
+  if (!env?.RESEND_API_KEY || !env?.EMAIL_FROM) return false;
+  const verifyUrl = `https://civil-ai.pages.dev/verify-email.html?token=${encodeURIComponent(token)}`;
+  let result;
+  try { result = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: env.EMAIL_FROM,
+      to: [email],
+      subject: "Verify your CIVIL AI account",
+      html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>Welcome to CIVIL AI</h2><p>Verify your email address. This one-time link expires in 24 hours.</p><p><a href="${verifyUrl}">Verify my email</a></p><p>If you did not create this account, ignore this email.</p></div>`
+    })
+  }); } catch { return false; }
+  return result.ok;
+}
+
+async function issueVerification(db, env, userId, email) {
+  const token = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+  const tokenHash = await digestHex(token);
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare("UPDATE email_verification_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL").bind(now, userId).run();
+  await db.prepare("INSERT INTO email_verification_tokens (token_hash, user_id, created_at, expires_at, used_at) VALUES (?, ?, ?, ?, NULL)")
+    .bind(tokenHash, userId, now, now + VERIFICATION_SECONDS).run();
+  return await sendVerificationEmail(env, email, token);
+}
+
 
 function response(payload, status, origin, extraHeaders = {}) {
   const headers = new Headers({
@@ -140,6 +169,7 @@ export async function handleAuthRequest(request, env, origin) {
       return response({ error: "Registration protection is not configured or temporarily unavailable." }, 503, origin);
     }
     if (!hasDatabase(env)) return response({ error: "Account storage is not configured yet." }, 503, origin);
+    if (!env?.RESEND_API_KEY || !env?.EMAIL_FROM) return response({ error: "Email verification service is not configured." }, 503, origin);
     const parsed = await readJson(request);
     if (parsed.error) return response({ error: "Invalid registration request." }, parsed.error, origin);
     const email = typeof parsed.body?.email === "string" ? parsed.body.email.trim().toLowerCase() : "";
@@ -158,15 +188,54 @@ export async function handleAuthRequest(request, env, origin) {
       await env.DB.prepare(
         "INSERT INTO users (id, email, password_salt, password_hash, email_verified, status, created_at) VALUES (?, ?, ?, ?, 0, 'active', ?)"
       ).bind(userId, email, saltHex, passwordHash, now).run();
+      const emailSent = await issueVerification(env.DB, env, userId, email);
+      if (!emailSent) return response({ error: "Account created but verification email could not be sent. Use resend verification after service is restored." }, 503, origin);
       const token = await createSession(env.DB, userId);
       return response({
         user: { id: userId, email, email_verified: false },
         premium_access: false,
-        message: "Account created. Email verification must be completed before Premium access can be granted."
+        verification_required: true,
+        message: "Account created. Check your email to verify your account."
       }, 201, origin, { "Set-Cookie": sessionCookie(token) });
     } catch {
       return response({ error: "Unable to create account. Please try again." }, 409, origin);
     }
+  }
+
+
+  if (route === "/api/auth/verify-email" && method === "POST") {
+    if (!await rateLimit(env, "AUTH_VERIFY_LIMITER", request)) {
+      return response({ error: "Email verification protection is unavailable." }, 503, origin);
+    }
+    if (!hasDatabase(env)) return response({ error: "Account storage is not configured yet." }, 503, origin);
+    const parsed = await readJson(request);
+    if (parsed.error) return response({ error: "Invalid verification request." }, parsed.error, origin);
+    const token = typeof parsed.body?.token === "string" ? parsed.body.token : "";
+    if (token.length < 32 || token.length > 128) return response({ error: "Verification link is invalid or expired." }, 400, origin);
+    const tokenHash = await digestHex(token);
+    const now = Math.floor(Date.now() / 1000);
+    const record = await env.DB.prepare("SELECT t.user_id FROM email_verification_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = ? AND t.used_at IS NULL AND t.expires_at > ? AND u.status = 'active' LIMIT 1").bind(tokenHash, now).first();
+    if (!record) return response({ error: "Verification link is invalid or expired." }, 400, origin);
+    const consumed = await env.DB.prepare("UPDATE email_verification_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?").bind(now, tokenHash, now).run();
+    if (!consumed?.meta?.changes) return response({ error: "Verification link is invalid or expired." }, 400, origin);
+    await env.DB.prepare("UPDATE users SET email_verified = 1 WHERE id = ? AND status = 'active'").bind(record.user_id).run();
+    return response({ verified: true, message: "Email address verified successfully." }, 200, origin);
+  }
+
+  if (route === "/api/auth/resend-verification" && method === "POST") {
+    if (!await rateLimit(env, "AUTH_VERIFY_LIMITER", request)) {
+      return response({ error: "Email verification protection is unavailable." }, 503, origin);
+    }
+    if (!hasDatabase(env)) return response({ error: "Account storage is not configured yet." }, 503, origin);
+    const parsed = await readJson(request);
+    if (parsed.error) return response({ error: "Invalid request." }, parsed.error, origin);
+    const email = typeof parsed.body?.email === "string" ? parsed.body.email.trim().toLowerCase() : "";
+    if (!EMAIL_RE.test(email) || email.length > 254) return response({ error: "If the account exists and needs verification, an email will be sent." }, 200, origin);
+    const user = await env.DB.prepare("SELECT id, email_verified FROM users WHERE email = ? AND status = 'active' LIMIT 1").bind(email).first();
+    if (user && Number(user.email_verified) !== 1 && env?.RESEND_API_KEY && env?.EMAIL_FROM) {
+      await issueVerification(env.DB, env, user.id, email);
+    }
+    return response({ message: "If the account exists and needs verification, an email will be sent." }, 200, origin);
   }
 
   if (route === "/api/auth/login" && method === "POST") {

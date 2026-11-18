@@ -40,3 +40,11 @@ namespace_id = "9003"
 [ratelimits.simple]
 limit = 5
 period = 60
+
+[[ratelimits]]
+name = "AUTH_VERIFY_LIMITER"
+namespace_id = "9004"
+
+[ratelimits.simple]
+limit = 5
+period = 60

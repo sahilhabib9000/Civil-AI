@@ -8,7 +8,7 @@ import json
 import re
 import sys
 
-FILES = ("index.html", "guardian.html")
+FILES = ("index.html", "guardian.html", "account.html", "verify-email.html")
 
 
 class AuditParser(HTMLParser):
