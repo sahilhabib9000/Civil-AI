@@ -34,12 +34,13 @@ test("unknown auth routes are not silently accepted", async () => {
   assert.equal(response.status, 405);
 });
 
-test("session and Premium checks deny access without a configured database", async () => {
+test("session and Premium checks report unavailable storage without a configured database", async () => {
   const request = new Request("https://backend.example/api/auth/me");
   assert.equal(await getSessionUser(request, {}), null);
   const entitlement = await requirePremium(request, {});
   assert.equal(entitlement.allowed, false);
-  assert.equal(entitlement.status, 401);
+  assert.equal(entitlement.status, 503);
+  assert.equal(entitlement.user, null);
 });
 
 test("migration includes unique users, hashed sessions and entitlement records", () => {
