@@ -1,0 +1,79 @@
+name: CIVIL AI Live API Smoke Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/live-api-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: civil-ai-live-api-smoke
+  cancel-in-progress: false
+
+jobs:
+  live-api:
+    name: Check production Worker endpoints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test live health and authentication endpoints
+        env:
+          API_BASE: https://civil-ai-backend.sahilhabib9000.workers.dev
+          FRONTEND_ORIGIN: https://civil-ai.pages.dev
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+
+          const base = process.env.API_BASE;
+          const origin = process.env.FRONTEND_ORIGIN;
+
+          async function getJson(path) {
+            const response = await fetch(base + path, {
+              headers: { Accept: 'application/json', Origin: origin },
+              signal: AbortSignal.timeout(20000)
+            });
+            const text = await response.text();
+            let body;
+            try { body = JSON.parse(text); }
+            catch { throw new Error(`${path}: expected JSON, received HTTP ${response.status}: ${text.slice(0, 300)}`); }
+            console.log(`${path}: HTTP ${response.status}`, body);
+            return { response, body };
+          }
+
+          const health = await getJson('/api/health');
+          assert.equal(health.response.status, 200, 'health endpoint must return HTTP 200');
+          assert.equal(health.body.service, 'CIVIL AI Backend');
+          assert.equal(health.body.status, 'online');
+          assert.equal(health.body.ai_enabled, true, 'Cloudflare AI binding must be active');
+          assert.ok(health.body.model, 'AI model identifier must be present');
+          assert.equal(health.response.headers.get('access-control-allow-origin'), origin,
+            'frontend origin must be allowed by CORS');
+
+          const me = await getJson('/api/auth/me');
+          assert.equal(me.response.status, 200, 'auth/me should respond successfully when D1 is configured');
+          assert.equal(me.body.user, null, 'unauthenticated request must not create or expose a user');
+          assert.equal(me.body.premium_access, false, 'unauthenticated request must never receive Premium access');
+          assert.equal(me.response.headers.get('access-control-allow-origin'), origin,
+            'auth endpoint must allow the configured frontend origin');
+
+          const preflight = await fetch(base + '/api/auth/me', {
+            method: 'OPTIONS',
+            headers: { Origin: origin, 'Access-Control-Request-Method': 'GET' },
+            signal: AbortSignal.timeout(20000)
+          });
+          console.log('CORS preflight: HTTP', preflight.status);
+          assert.equal(preflight.status, 204, 'CORS preflight must return HTTP 204');
+          assert.equal(preflight.headers.get('access-control-allow-origin'), origin);
+
+          const blocked = await fetch(base + '/api/health', {
+            headers: { Origin: 'https://example.invalid' },
+            signal: AbortSignal.timeout(20000)
+          });
+          console.log('Untrusted origin: HTTP', blocked.status);
+          assert.equal(blocked.status, 403, 'untrusted origins must be rejected');
+
+          console.log('LIVE API SMOKE TESTS PASSED');
+          NODE
