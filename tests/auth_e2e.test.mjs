@@ -80,6 +80,9 @@ function cookieFrom(response) {
   return cookieName+"="+match[1];
 }
 
+const invalidEmail = await call("/api/auth/register",{method:"POST",body:{email:"not-an-email",password}});
+assert.equal(invalidEmail.status,400,"reject malformed email");
+
 const weak = await call("/api/auth/register",{method:"POST",body:{email:"weak@example.invalid",password:"short"}});
 assert.equal(weak.status,400,"reject short passwords");
 
@@ -93,6 +96,10 @@ assert.equal(registeredBody.user.email,email);
 assert.equal(registeredBody.user.email_verified,false);
 assert.equal(registeredBody.premium_access,false);
 const sessionCookie = cookieFrom(registered);
+const cookieHeader = registered.headers.get("set-cookie") || "";
+assert.match(cookieHeader,/HttpOnly/i,"session cookie is HttpOnly");
+assert.match(cookieHeader,/Secure/i,"session cookie is Secure");
+assert.match(cookieHeader,/SameSite=None/i,"session cookie supports credentialed cross-site API calls");
 
 const duplicate = await call("/api/auth/register",{method:"POST",body:{email:email.toUpperCase(),password}});
 assert.equal(duplicate.status,409,"duplicate email is rejected case-insensitively");
