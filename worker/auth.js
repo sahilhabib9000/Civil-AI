@@ -103,15 +103,20 @@ export async function getSessionUser(request, env) {
   ).bind(tokenHash, now).first();
 }
 
+async function hasActivePremiumEntitlement(db, userId) {
+  const now = Math.floor(Date.now() / 1000);
+  const entitlement = await db.prepare(
+    "SELECT id FROM premium_entitlements WHERE user_id = ? AND status = 'active' AND starts_at <= ? AND (expires_at IS NULL OR expires_at > ?) LIMIT 1"
+  ).bind(userId, now, now).first();
+  return Boolean(entitlement);
+}
+
 export async function requirePremium(request, env) {
+  if (!hasDatabase(env)) return { allowed: false, status: 503, user: null };
   const user = await getSessionUser(request, env);
   if (!user || Number(user.email_verified) !== 1) return { allowed: false, status: 401, user: null };
-  if (!hasDatabase(env)) return { allowed: false, status: 503, user: null };
-  const now = Math.floor(Date.now() / 1000);
-  const entitlement = await env.DB.prepare(
-    "SELECT id FROM premium_entitlements WHERE user_id = ? AND status = 'active' AND starts_at <= ? AND (expires_at IS NULL OR expires_at > ?) LIMIT 1"
-  ).bind(user.id, now, now).first();
-  return entitlement
+  const allowed = await hasActivePremiumEntitlement(env.DB, user.id);
+  return allowed
     ? { allowed: true, status: 200, user }
     : { allowed: false, status: 403, user };
 }
@@ -186,9 +191,13 @@ export async function handleAuthRequest(request, env, origin) {
       return response({ error: "Email or password is incorrect." }, 401, origin);
     }
     const token = await createSession(env.DB, user.id);
+    const emailVerified = Number(user.email_verified) === 1;
+    const premiumAccess = emailVerified
+      ? await hasActivePremiumEntitlement(env.DB, user.id)
+      : false;
     return response({
-      user: { id: user.id, email: user.email, email_verified: Number(user.email_verified) === 1 },
-      premium_access: false
+      user: { id: user.id, email: user.email, email_verified: emailVerified },
+      premium_access: premiumAccess
     }, 200, origin, { "Set-Cookie": sessionCookie(token) });
   }
 
@@ -207,9 +216,13 @@ export async function handleAuthRequest(request, env, origin) {
     if (!hasDatabase(env)) return response({ error: "Account storage is not configured yet." }, 503, origin);
     const user = await getSessionUser(request, env);
     if (!user) return response({ user: null, premium_access: false }, 200, origin);
+    const emailVerified = Number(user.email_verified) === 1;
+    const premiumAccess = emailVerified
+      ? await hasActivePremiumEntitlement(env.DB, user.id)
+      : false;
     return response({
-      user: { id: user.id, email: user.email, email_verified: Number(user.email_verified) === 1 },
-      premium_access: false
+      user: { id: user.id, email: user.email, email_verified: emailVerified },
+      premium_access: premiumAccess
     }, 200, origin);
   }
 
