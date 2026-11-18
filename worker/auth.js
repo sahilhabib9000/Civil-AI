@@ -7,7 +7,8 @@ const VERIFICATION_SECONDS = 86400;
 async function sendVerificationEmail(env, email, token) {
   if (!env?.RESEND_API_KEY || !env?.EMAIL_FROM) return false;
   const verifyUrl = `https://civil-ai.pages.dev/verify-email.html?token=${encodeURIComponent(token)}`;
-  const result = await fetch("https://api.resend.com/emails", {
+  let result;
+  try { result = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -16,7 +17,7 @@ async function sendVerificationEmail(env, email, token) {
       subject: "Verify your CIVIL AI account",
       html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>Welcome to CIVIL AI</h2><p>Verify your email address. This one-time link expires in 24 hours.</p><p><a href="${verifyUrl}">Verify my email</a></p><p>If you did not create this account, ignore this email.</p></div>`
     })
-  });
+  }); } catch { return false; }
   return result.ok;
 }
 
@@ -213,10 +214,11 @@ export async function handleAuthRequest(request, env, origin) {
     if (token.length < 32 || token.length > 128) return response({ error: "Verification link is invalid or expired." }, 400, origin);
     const tokenHash = await digestHex(token);
     const now = Math.floor(Date.now() / 1000);
-    const record = await env.DB.prepare("SELECT user_id FROM email_verification_tokens WHERE token_hash = ? AND used_at IS NULL AND expires_at > ? LIMIT 1").bind(tokenHash, now).first();
+    const record = await env.DB.prepare("SELECT t.user_id FROM email_verification_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = ? AND t.used_at IS NULL AND t.expires_at > ? AND u.status = 'active' LIMIT 1").bind(tokenHash, now).first();
     if (!record) return response({ error: "Verification link is invalid or expired." }, 400, origin);
+    const consumed = await env.DB.prepare("UPDATE email_verification_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?").bind(now, tokenHash, now).run();
+    if (!consumed?.meta?.changes) return response({ error: "Verification link is invalid or expired." }, 400, origin);
     await env.DB.prepare("UPDATE users SET email_verified = 1 WHERE id = ? AND status = 'active'").bind(record.user_id).run();
-    await env.DB.prepare("UPDATE email_verification_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL").bind(now, tokenHash).run();
     return response({ verified: true, message: "Email address verified successfully." }, 200, origin);
   }
 
