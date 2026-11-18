@@ -1,0 +1,38 @@
+name: CIVIL AI Authentication E2E
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "worker/auth.js"
+      - "tests/auth_e2e.test.mjs"
+      - ".github/workflows/auth-e2e.yml"
+  push:
+    branches: [main]
+    paths:
+      - "worker/auth.js"
+      - "tests/auth_e2e.test.mjs"
+      - ".github/workflows/auth-e2e.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auth-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  auth-e2e:
+    name: Isolated authentication end-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run isolated authentication tests
+        run: node tests/auth_e2e.test.mjs
