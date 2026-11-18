@@ -2,6 +2,34 @@ const PBKDF2_ITERATIONS = 210000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const SESSION_COOKIE = "__Host-civilai_session";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VERIFICATION_SECONDS = 86400;
+
+async function sendVerificationEmail(env, email, token) {
+  if (!env?.RESEND_API_KEY || !env?.EMAIL_FROM) return false;
+  const verifyUrl = `https://civil-ai.pages.dev/verify-email.html?token=${encodeURIComponent(token)}`;
+  const result = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: env.EMAIL_FROM,
+      to: [email],
+      subject: "Verify your CIVIL AI account",
+      html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>Welcome to CIVIL AI</h2><p>Verify your email address. This one-time link expires in 24 hours.</p><p><a href="${verifyUrl}">Verify my email</a></p><p>If you did not create this account, ignore this email.</p></div>`
+    })
+  });
+  return result.ok;
+}
+
+async function issueVerification(db, env, userId, email) {
+  const token = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+  const tokenHash = await digestHex(token);
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare("UPDATE email_verification_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL").bind(now, userId).run();
+  await db.prepare("INSERT INTO email_verification_tokens (token_hash, user_id, created_at, expires_at, used_at) VALUES (?, ?, ?, ?, NULL)")
+    .bind(tokenHash, userId, now, now + VERIFICATION_SECONDS).run();
+  return await sendVerificationEmail(env, email, token);
+}
+
 
 function response(payload, status, origin, extraHeaders = {}) {
   const headers = new Headers({
@@ -140,6 +168,7 @@ export async function handleAuthRequest(request, env, origin) {
       return response({ error: "Registration protection is not configured or temporarily unavailable." }, 503, origin);
     }
     if (!hasDatabase(env)) return response({ error: "Account storage is not configured yet." }, 503, origin);
+    if (!env?.RESEND_API_KEY || !env?.EMAIL_FROM) return response({ error: "Email verification service is not configured." }, 503, origin);
     const parsed = await readJson(request);
     if (parsed.error) return response({ error: "Invalid registration request." }, parsed.error, origin);
     const email = typeof parsed.body?.email === "string" ? parsed.body.email.trim().toLowerCase() : "";
