@@ -48,7 +48,7 @@ class MemoryD1 {
           db.verificationTokens.forEach(x => {
             if ((sql.includes("user_id = ?") ? x.user_id === second : x.token_hash === second) && x.used_at === null) x.used_at = usedAt;
           });
-          return {success:true};
+          return {success:true,meta:{changes:1}};
         }
         if (sql.startsWith("INSERT INTO email_verification_tokens")) {
           const [token_hash,user_id,created_at,expires_at] = args;
