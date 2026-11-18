@@ -157,6 +157,13 @@ assert.equal((await verified.json()).verified,true);
 const reused = await call("/api/auth/verify-email",{method:"POST",body:{token:currentVerificationToken}});
 assert.equal(reused.status,400,"verification token is single-use");
 
+const expiredToken = "expired-verification-token-that-is-long-enough";
+const expiredHash = [...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(expiredToken)))].map(v=>v.toString(16).padStart(2,"0")).join("");
+const expiredNow = Math.floor(Date.now()/1000);
+DB.verificationTokens.push({token_hash:expiredHash,user_id:DB.users[0].id,created_at:expiredNow-90000,expires_at:expiredNow-1,used_at:null});
+const expiredVerification = await call("/api/auth/verify-email",{method:"POST",body:{token:expiredToken}});
+assert.equal(expiredVerification.status,400,"expired verification token is rejected");
+
 const duplicate = await call("/api/auth/register",{method:"POST",body:{email:email.toUpperCase(),password}});
 assert.equal(duplicate.status,409);
 const me = await call("/api/auth/me",{cookie:sessionCookie});
