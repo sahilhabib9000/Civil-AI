@@ -7,7 +7,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 class MemoryD1 {
   users = [];
   sessions = [];
-  entitlements = [];
+  entitlements = [];\n  verificationTokens = [];
   prepare(sql) {
     const db = this;
     let args = [];
@@ -26,6 +26,10 @@ class MemoryD1 {
           const user = session && db.users.find(x => x.id === session.user_id && x.status === "active");
           return user ? { id:user.id, email:user.email, email_verified:user.email_verified, expires_at:session.expires_at } : null;
         }
+        if (sql.includes("FROM email_verification_tokens")) {
+          const [hash, now] = args;
+          return db.verificationTokens.find(x => x.token_hash === hash && x.used_at === null && x.expires_at > now) || null;
+        }
         if (sql.includes("FROM premium_entitlements")) {
           const [userId, now1, now2] = args;
           return db.entitlements.find(x => x.user_id === userId && x.status === "active" && x.starts_at <= now1 && (x.expires_at === null || x.expires_at > now2)) || null;
@@ -38,6 +42,26 @@ class MemoryD1 {
           if (db.users.some(x => x.email.toLowerCase() === email.toLowerCase())) throw new Error("unique");
           db.users.push({id,email,password_salt:salt,password_hash:hash,email_verified:0,status:"active",created_at:created});
           return { success:true };
+        }
+        if (sql.startsWith("UPDATE email_verification_tokens SET used_at")) {
+          const [usedAt,userId] = args;
+          db.verificationTokens.forEach(x => { if (x.user_id === userId && x.used_at === null) x.used_at = usedAt; });
+          return {success:true};
+        }
+        if (sql.startsWith("INSERT INTO email_verification_tokens")) {
+          const [token_hash,user_id,created_at,expires_at] = args;
+          db.verificationTokens.push({token_hash,user_id,created_at,expires_at,used_at:null});
+          return {success:true};
+        }
+        if (sql.startsWith("UPDATE users SET email_verified")) {
+          const user = db.users.find(x => x.id === args[0]);
+          if (user) user.email_verified = 1;
+          return {success:true};
+        }
+        if (sql.startsWith("UPDATE email_verification_tokens SET used_at")) {
+          const [usedAt,hash] = args;
+          db.verificationTokens.forEach(x => { if (x.token_hash === hash && x.used_at === null) x.used_at = usedAt; });
+          return {success:true};
         }
         if (sql.startsWith("INSERT INTO sessions")) {
           const [token_hash,user_id,created_at,expires_at] = args;
@@ -101,6 +125,12 @@ assert.match(cookieHeader,/HttpOnly/i,"session cookie is HttpOnly");
 assert.match(cookieHeader,/Secure/i,"session cookie is Secure");
 assert.match(cookieHeader,/SameSite=None/i,"session cookie supports credentialed cross-site API calls");
 
+const verifyResponse = await call("/api/auth/verify-email",{method:"POST",body:{token:sentVerificationToken}});
+assert.equal(verifyResponse.status,200,"valid verification token accepted");
+assert.equal((await verifyResponse.json()).verified,true);
+const reusedToken = await call("/api/auth/verify-email",{method:"POST",body:{token:sentVerificationToken}});
+assert.equal(reusedToken.status,400,"verification token is single-use");
+
 const duplicate = await call("/api/auth/register",{method:"POST",body:{email:email.toUpperCase(),password}});
 assert.equal(duplicate.status,409,"duplicate email is rejected case-insensitively");
 
@@ -129,6 +159,10 @@ assert.equal(logout.status,200);
 assert.equal((await logout.json()).logged_out,true);
 const afterLogout = await call("/api/auth/me",{cookie:loginCookie});
 assert.equal((await afterLogout.json()).user,null,"logout invalidates the server-side session");
+
+const resend = await call("/api/auth/resend-verification",{method:"POST",body:{email}});
+assert.equal(resend.status,200,"resend endpoint returns generic response");
+assert.match((await resend.json()).message,/If the account exists/);
 
 const noLimiter = await call("/api/auth/login",{method:"POST",body:{email,password},includeLimiter:false});
 assert.equal(noLimiter.status,503,"missing rate limiter fails closed");
