@@ -13,6 +13,8 @@ on:
       - "tests/dom_xss_regression.test.cjs"
       - "_headers"
       - "tools/civil_ai_security_audit.py"
+      - "worker/auth.js"
+      - "tests/auth_e2e.test.mjs"
       - ".github/workflows/civil-ai-audit.yml"
   workflow_dispatch:
 
@@ -34,6 +36,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Run isolated authentication end-to-end tests
+        run: node tests/auth_e2e.test.mjs
       - name: Run concrete, steel and BOQ regression tests
         run: node tests/calculator_regression.test.cjs
       - name: Run brick calculator regression tests
