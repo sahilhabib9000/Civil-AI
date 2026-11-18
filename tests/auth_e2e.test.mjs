@@ -97,7 +97,7 @@ globalThis.fetch = async (_url, options) => {
   assert.match(options.headers.Authorization,/Bearer test-resend-key/);
   const body = JSON.parse(options.body);
   assert.equal(body.to[0],email);
-  const match = body.html.match(/verify-email\\.html\\?token=([^"&]+)/);
+  const match = body.html.match(/verify-email\.html\?token=([^"&]+)/);
   assert.ok(match,"verification email contains a one-time link");
   sentVerificationToken = decodeURIComponent(match[1]);
   emailSendCount++;
