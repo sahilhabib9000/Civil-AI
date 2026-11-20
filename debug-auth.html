@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CIVIL AI API Connection Test</title>
+<style>
+body{font:16px Arial,sans-serif;background:#0b1220;color:#e2e8f0;padding:24px;max-width:720px;margin:auto}
+main{background:#172438;border:1px solid #30445d;border-radius:14px;padding:22px}
+button{padding:12px 18px;background:#0284c7;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#08111e;padding:14px;border-radius:8px;min-height:90px}
+p{line-height:1.5;color:#cbd5e1}
+</style>
+</head>
+<body><main>
+<h1>CIVIL AI API connection test</h1>
+<p>This safe test sends an empty login request only. It does not create an account, sign in, or change database records. It checks whether this page can reach the backend and read its response.</p>
+<button id="test">Run connection test</button>
+<h3>Result</h3><pre id="result">Not tested yet.</pre>
+<script>
+const API="https://civil-ai-backend.sahilhabib9000.workers.dev";
+document.getElementById("test").addEventListener("click",async()=>{
+ const out=document.getElementById("result");
+ out.textContent="Testing connection…";
+ try{
+  const r=await fetch(API+"/api/auth/login",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:"{}"});
+  const body=await r.text();
+  out.textContent="CONNECTION OK\nHTTP STATUS: "+r.status+"\nRESPONSE: "+body;
+ }catch(e){
+  out.textContent="BROWSER FETCH FAILED\nERROR: "+String(e)+"\nPAGE ORIGIN: "+location.origin+"\nBACKEND: "+API;
+ }
+});
+</script>
+</main></body></html>
