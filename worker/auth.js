@@ -197,8 +197,26 @@ export async function handleAuthRequest(request, env, origin) {
         verification_required: true,
         message: "Account created. Check your email to verify your account."
       }, 201, origin, { "Set-Cookie": sessionCookie(token) });
-    } catch {
-      return response({ error: "Unable to create account. Please try again." }, 409, origin);
+    } catch (error) {
+      // Keep failed registrations from leaving an unusable account behind.
+      // Never log request bodies, passwords, email addresses, or verification tokens.
+      console.error("CIVIL AI registration failed:", {
+        name: error instanceof Error ? error.name : "UnknownError",
+        message: error instanceof Error ? error.message : "Unknown registration error"
+      });
+      try {
+        await env.DB.batch([
+          env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(userId),
+          env.DB.prepare("DELETE FROM email_verification_tokens WHERE user_id = ?").bind(userId),
+          env.DB.prepare("DELETE FROM users WHERE id = ?").bind(userId)
+        ]);
+      } catch (cleanupError) {
+        console.error("CIVIL AI registration cleanup failed:", {
+          name: cleanupError instanceof Error ? cleanupError.name : "UnknownError",
+          message: cleanupError instanceof Error ? cleanupError.message : "Unknown cleanup error"
+        });
+      }
+      return response({ error: "Unable to create account. Please try again." }, 500, origin);
     }
   }
 
