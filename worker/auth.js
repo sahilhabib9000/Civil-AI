@@ -1,4 +1,4 @@
-const PBKDF2_ITERATIONS = 210000;
+const PBKDF2_ITERATIONS = 100000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const SESSION_COOKIE = "__Host-civilai_session";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
