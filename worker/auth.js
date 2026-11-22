@@ -5,7 +5,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VERIFICATION_SECONDS = 86400;
 
 async function sendVerificationEmail(env, email, token) {
-  if (!env?.RESEND_API_KEY || !env?.EMAIL_FROM) return false;
+  if (!env?.RESEND_API_KEY || !env?.EMAIL_FROM) {
+    console.warn("CIVIL AI verification email skipped: Resend configuration missing", {
+      hasApiKey: Boolean(env?.RESEND_API_KEY),
+      hasEmailFrom: Boolean(env?.EMAIL_FROM)
+    });
+    return false;
+  }
   const verifyUrl = `https://civil-ai.pages.dev/verify-email.html?token=${encodeURIComponent(token)}`;
   let result;
   try { result = await fetch("https://api.resend.com/emails", {
@@ -17,7 +23,16 @@ async function sendVerificationEmail(env, email, token) {
       subject: "Verify your CIVIL AI account",
       html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>Welcome to CIVIL AI</h2><p>Verify your email address. This one-time link expires in 24 hours.</p><p><a href="${verifyUrl}">Verify my email</a></p><p>If you did not create this account, ignore this email.</p></div>`
     })
-  }); } catch { return false; }
+  }); } catch (error) {
+    console.error("CIVIL AI Resend request failed", {
+      name: error instanceof Error ? error.name : "UnknownError"
+    });
+    return false;
+  }
+  console.log("CIVIL AI Resend provider response", {
+    status: result.status,
+    ok: result.ok
+  });
   return result.ok;
 }
 
@@ -251,7 +266,19 @@ export async function handleAuthRequest(request, env, origin) {
     if (!EMAIL_RE.test(email) || email.length > 254) return response({ error: "If the account exists and needs verification, an email will be sent." }, 200, origin);
     const user = await env.DB.prepare("SELECT id, email_verified FROM users WHERE email = ? AND status = 'active' LIMIT 1").bind(email).first();
     if (user && Number(user.email_verified) !== 1 && env?.RESEND_API_KEY && env?.EMAIL_FROM) {
-      await issueVerification(env.DB, env, user.id, email);
+      const emailSent = await issueVerification(env.DB, env, user.id, email);
+      console.log("CIVIL AI verification resend result", {
+        userFound: true,
+        emailVerified: false,
+        emailSent
+      });
+    } else {
+      console.log("CIVIL AI verification resend skipped", {
+        userFound: Boolean(user),
+        emailVerified: user ? Number(user.email_verified) === 1 : null,
+        hasApiKey: Boolean(env?.RESEND_API_KEY),
+        hasEmailFrom: Boolean(env?.EMAIL_FROM)
+      });
     }
     return response({ message: "If the account exists and needs verification, an email will be sent." }, 200, origin);
   }
