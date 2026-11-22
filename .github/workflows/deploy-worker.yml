@@ -42,3 +42,5 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "4.164.0"
           command: deploy
+
+# Keep this workflow eligible for explicit diagnostic redeploys.
