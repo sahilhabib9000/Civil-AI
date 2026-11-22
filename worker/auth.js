@@ -29,9 +29,25 @@ async function sendVerificationEmail(env, email, token) {
     });
     return false;
   }
+  let providerError = null;
+  if (!result.ok) {
+    try {
+      const payload = await result.clone().json();
+      providerError = {
+        name: typeof payload?.name === "string" ? payload.name.slice(0, 80) : null,
+        statusCode: Number.isFinite(Number(payload?.statusCode)) ? Number(payload.statusCode) : null,
+        message: typeof payload?.message === "string"
+          ? payload.message.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, "[redacted-email]").slice(0, 240)
+          : null
+      };
+    } catch {
+      providerError = { parseError: true };
+    }
+  }
   console.log("CIVIL AI Resend provider response", {
     status: result.status,
-    ok: result.ok
+    ok: result.ok,
+    ...(providerError ? { providerError } : {})
   });
   return result.ok;
 }
