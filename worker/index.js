@@ -137,6 +137,70 @@ export default {
       }
     }
 
+    if (url.pathname.startsWith("/api/admin/")) {
+      const allowedAdmins = String(env?.ADMIN_EMAILS || "")
+        .split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
+      const admin = await getSessionUser(request, env);
+      if (!admin || Number(admin.email_verified) !== 1 ||
+          !allowedAdmins.includes(String(admin.email || "").toLowerCase())) {
+        return jsonResponse({ error: "Admin access denied." }, 403, origin);
+      }
+
+      if (url.pathname === "/api/admin/customers/detail") {
+        if (request.method !== "GET") return jsonResponse({ error: "Method not allowed." }, 405, origin);
+        const userId = (url.searchParams.get("id") || "").trim();
+        if (!userId || userId.length > 80) return jsonResponse({ error: "A valid customer ID is required." }, 400, origin);
+        try {
+          const customer = await env.DB.prepare(
+            "SELECT id, email, email_verified, status, created_at FROM users WHERE id = ? LIMIT 1"
+          ).bind(userId).first();
+          if (!customer) return jsonResponse({ error: "Customer not found." }, 404, origin);
+          const now = Math.floor(Date.now() / 1000);
+          const entitlements = await env.DB.prepare(
+            "SELECT status, starts_at, expires_at FROM premium_entitlements WHERE user_id = ? ORDER BY starts_at DESC LIMIT 20"
+          ).bind(userId).all();
+          const auditId = crypto.randomUUID();
+          await env.DB.prepare(
+            "INSERT INTO admin_audit_logs (id, admin_email, action, target_user_id, metadata_json, created_at) VALUES (?, ?, 'view_customer_details', ?, '{}', ?)"
+          ).bind(auditId, admin.email, userId, now).run();
+          return jsonResponse({
+            customer: {
+              id: customer.id, email: customer.email,
+              email_verified: Number(customer.email_verified) === 1,
+              status: customer.status, created_at: customer.created_at
+            },
+            premium_entitlements: (entitlements?.results || []).map(item => ({
+              status: item.status,
+              starts_at: item.starts_at,
+              expires_at: item.expires_at,
+              currently_active: item.status === "active" && Number(item.starts_at) <= now &&
+                (item.expires_at == null || Number(item.expires_at) > now)
+            }))
+          }, 200, origin);
+        } catch (error) {
+          console.error("CIVIL AI admin customer detail failed:", {
+            name: error instanceof Error ? error.name : "UnknownError"
+          });
+          return jsonResponse({ error: "Could not load customer details. Check that the admin audit migration has been applied." }, 500, origin);
+        }
+      }
+
+      if (url.pathname === "/api/admin/audit-logs") {
+        if (request.method !== "GET") return jsonResponse({ error: "Method not allowed." }, 405, origin);
+        try {
+          const logs = await env.DB.prepare(
+            "SELECT id, admin_email, action, target_user_id, metadata_json, created_at FROM admin_audit_logs ORDER BY created_at DESC LIMIT 100"
+          ).all();
+          return jsonResponse({ logs: logs?.results || [] }, 200, origin);
+        } catch (error) {
+          console.error("CIVIL AI admin audit list failed:", {
+            name: error instanceof Error ? error.name : "UnknownError"
+          });
+          return jsonResponse({ error: "Audit log table is not ready. Apply the admin audit migration first." }, 503, origin);
+        }
+      }
+    }
+
     if (url.pathname === "/api/health" && request.method === "GET") {
       return jsonResponse({
         service: "CIVIL AI Backend",
