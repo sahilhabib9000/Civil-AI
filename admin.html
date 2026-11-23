@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Admin Dashboard | CIVIL AI</title>
+<style>
+:root{color-scheme:dark;--bg:#081321;--panel:#12243a;--line:#29445f;--text:#e5eef8;--muted:#a9bbcf;--blue:#38bdf8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{padding:20px 5%;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.brand{font-size:22px;font-weight:bold;color:var(--blue)}main{width:min(1100px,92%);margin:32px auto}
+h1{margin:0 0 8px}p,.muted{color:var(--muted);line-height:1.5}
+button{border:0;border-radius:8px;padding:11px 16px;background:#087eae;color:white;font-weight:bold;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;margin:24px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:20px}
+.number{font-size:32px;font-weight:bold;margin-top:10px}
+.tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:13px}
+table{width:100%;border-collapse:collapse;min-width:620px}th,td{text-align:left;padding:14px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--blue)}
+#status{padding:14px;border-radius:9px;background:#172d46;margin:18px 0}
+</style>
+</head>
+<body>
+<header><div class="brand">CIVIL AI · ADMIN</div><div><a href="dashboard.html" style="color:#7dd3fc;margin-right:16px">Customer dashboard</a><button id="logout">Sign out</button></div></header>
+<main>
+<h1>Admin Dashboard</h1><p class="muted">Secure customer overview · latest 50 accounts</p>
+<div id="status" role="status">Checking administrator access…</div>
+<div id="content" hidden>
+<div class="stats">
+<section class="card"><div class="muted">Total customers</div><div class="number" id="total">—</div></section>
+<section class="card"><div class="muted">Verified customers</div><div class="number" id="verified">—</div></section>
+<section class="card"><div class="muted">Active Premium customers</div><div class="number" id="premium">—</div></section>
+</div>
+<section class="card"><h2>Recent customer accounts</h2><div class="tablewrap"><table><thead><tr><th>Email</th><th>Email verification</th><th>Account status</th><th>Created (Unix)</th></tr></thead><tbody id="customers"></tbody></table></div><p class="muted">This page is read-only. Account suspension, payment approval and Premium entitlement controls will be added only with audited server-side safeguards.</p></section>
+</div>
+</main>
+<script>
+async function api(path,body){const r=await fetch(path,{method:body===undefined?"GET":"POST",credentials:"include",headers:body===undefined?{}:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||"Request failed.");return d}
+function status(t){document.getElementById("status").textContent=t}
+(async()=>{try{const d=await api("/api/admin/overview");document.getElementById("total").textContent=d.stats.total_customers;document.getElementById("verified").textContent=d.stats.verified_customers;document.getElementById("premium").textContent=d.stats.active_premium_customers;const body=document.getElementById("customers");for(const u of d.customers){const tr=document.createElement("tr");for(const value of [u.email,u.email_verified?"Verified":"Not verified",u.status,String(u.created_at)]){const td=document.createElement("td");td.textContent=value;tr.appendChild(td)}body.appendChild(tr)}document.getElementById("content").hidden=false;status("Administrator access confirmed for "+d.admin.email+".")}catch(e){status(e.message+" If you are the configured administrator, sign in with your verified account and refresh.")}})();
+document.getElementById("logout").onclick=async()=>{try{await api("/api/auth/logout",{});location.href="account.html"}catch(e){status(e.message)}};
+</script>
+</body></html>
