@@ -71,7 +71,7 @@ $("registerForm").addEventListener("submit",async event=>{
 });
 $("loginForm").addEventListener("submit",async event=>{
  event.preventDefault();status("Signing in…");
- try{const data=await api("/api/auth/login",{email:$("loginEmail").value,password:$("loginPassword").value});status(data.user?.email_verified?"Signed in. Your email is verified.":"Signed in, but email verification is still required.");$("signedIn").classList.remove("hidden");}
+ try{const data=await api("/api/auth/login",{email:$("loginEmail").value,password:$("loginPassword").value});$("signedIn").classList.remove("hidden");$("resend").classList.toggle("hidden",Boolean(data.user?.email_verified));if(data.user?.email_verified){status("Sign in successful. Opening your dashboard…");window.location.href="dashboard.html";}else{status("Signed in, but email verification is still required.");}}
  catch(error){status(error.message);}
 });
 $("resend").onclick=async()=>{
@@ -86,7 +86,7 @@ $("logout").onclick=async()=>{
  catch(error){status(error.message);}
 };
 (async()=>{
- try{const data=await api("/api/auth/me");if(data.user){status("Signed in as "+data.user.email+(data.user.email_verified?" (verified).":" (email not verified)."));$("signedIn").classList.remove("hidden");}else status("You are not signed in.");}
+ try{const data=await api("/api/auth/me");if(data.user){if(data.user.email_verified){window.location.href="dashboard.html";return;}status("Signed in as "+data.user.email+" (email not verified).");$("signedIn").classList.remove("hidden");$("resend").classList.remove("hidden");}else status("You are not signed in.");}
  catch(error){status(error.message);}
 })();
 </script>
