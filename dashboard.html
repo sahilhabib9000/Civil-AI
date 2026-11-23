@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Customer Dashboard | CIVIL AI</title>
+<style>
+:root{color-scheme:dark;--bg:#081321;--panel:#12243a;--panel2:#172d46;--line:#29445f;--text:#e5eef8;--muted:#a9bbcf;--blue:#38bdf8;--green:#34d399}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#123456 0,transparent 42%),var(--bg);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
+header{height:72px;padding:0 6%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#081321cc}
+.brand{font-weight:800;font-size:23px;color:var(--blue);letter-spacing:.4px}nav{display:flex;align-items:center;gap:20px}a{color:var(--blue);text-decoration:none}nav a{color:var(--muted)}
+button{border:0;border-radius:9px;padding:11px 17px;background:#087eae;color:white;font-weight:700;cursor:pointer}
+main{width:min(1120px,92%);margin:36px auto 70px}.eyebrow{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:2px}
+h1{font-size:clamp(30px,5vw,42px);margin:9px 0}h2{font-size:20px;margin:0 0 16px}.sub{color:var(--muted);line-height:1.6}
+.hero{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:26px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:17px}.panel{background:linear-gradient(145deg,var(--panel),#0e1d30);border:1px solid var(--line);border-radius:16px;padding:22px;min-width:0}
+.profile{grid-column:span 7}.membership{grid-column:span 5}.projects{grid-column:span 12}.tools{grid-column:span 12}
+.detail{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #29445f}.detail:last-child{border-bottom:0}
+.label{color:var(--muted);font-size:14px}.value{font-weight:700;overflow-wrap:anywhere}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:99px;background:#123d36;color:#8af0c8;font-size:12px;font-weight:700}
+.pill.free{background:#26364b;color:#cbd5e1}.pill.locked{background:#493719;color:#fcd58a}
+.toolgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px}
+.tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:17px}.tool h3{font-size:16px;margin:0 0 9px}.tool p{font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 13px}
+.empty{border:1px dashed #42617d;border-radius:12px;padding:25px;text-align:center;color:var(--muted);line-height:1.7}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:16px}
+#error{display:none;background:#4a2029;border:1px solid #9d4655;color:#ffd7dc;padding:14px;border-radius:10px;margin:18px 0}
+@media(max-width:700px){header{padding:0 4%}.profile,.membership{grid-column:span 12}nav{gap:12px}nav a:first-child{display:none}}
+</style>
+</head>
+<body>
+<header><div class="brand">CIVIL AI</div><nav><a href="index.html">Home</a><a href="account.html">Account</a><button id="logout" type="button">Sign out</button></nav></header>
+<main>
+<div class="hero"><div><div class="eyebrow">CUSTOMER WORKSPACE</div><h1>Welcome to your Dashboard</h1><div class="sub">Your CIVIL AI account, membership and project workspace.</div></div><a href="index.html">Explore engineering tools →</a></div>
+<div id="error" role="alert"></div>
+<div class="grid" id="dashboardContent" hidden>
+<section class="panel profile"><h2>Account Profile</h2>
+<div class="detail"><span class="label">Email address</span><span class="value" id="email">—</span></div>
+<div class="detail"><span class="label">Email verification</span><span class="pill" id="verification">Checking…</span></div>
+<div class="detail"><span class="label">Account ID</span><span class="value" id="accountId">—</span></div>
+</section>
+<section class="panel membership"><h2>Membership</h2>
+<div class="detail"><span class="label">Current plan</span><span class="pill free" id="plan">Free Account</span></div>
+<div class="detail"><span class="label">Premium access</span><span class="value" id="premium">Not active</span></div>
+<p class="note">Premium tools remain locked until a verified payment or approved entitlement is recorded.</p>
+</section>
+<section class="panel projects"><h2>My Projects</h2><div class="empty"><strong>Your project workspace is being prepared.</strong><br>Saved projects, project files and progress tracking will appear here when the project-management module is ready.</div></section>
+<section class="panel tools"><h2>Your CIVIL AI Tools</h2><div class="toolgrid">
+<article class="tool"><h3>Concrete Calculator</h3><p>Estimate concrete volume and nominal material quantities.</p><a href="index.html#civil-concrete">Open free tool →</a></article>
+<article class="tool"><h3>Steel Calculator</h3><p>Estimate theoretical reinforcement bar weight.</p><a href="index.html#steel-calculator">Open free tool →</a></article>
+<article class="tool"><h3>Brick Calculator</h3><p>Estimate brickwork quantities.</p><a href="index.html#brick-calculator">Open free tool →</a></article>
+<article class="tool"><h3>AI Engineering Assistant</h3><p>Ask civil engineering questions with clear assumptions.</p><a href="index.html#ai-assistant">Open free tool →</a></article>
+<article class="tool"><h3>BOQ Generator</h3><p>Prepare structured quantity schedules for projects.</p><span class="pill locked">Premium · In development</span></article>
+<article class="tool"><h3>Project Report Generator</h3><p>Create organized construction project reports.</p><span class="pill locked">Premium · In development</span></article>
+<article class="tool"><h3>Advanced Mix Design</h3><p>Advanced concrete mix design workspace.</p><span class="pill locked">Premium · In development</span></article>
+<article class="tool"><h3>Drawing / PDF Quantity Takeoff</h3><p>Extract and review quantities from project drawings.</p><span class="pill locked">Premium · In development</span></article>
+<article class="tool"><h3>Advanced Cost Estimation</h3><p>Build detailed construction cost estimates.</p><span class="pill locked">Premium · In development</span></article>
+<article class="tool"><h3>Structural Analysis</h3><p>Engineering analysis tools with professional review.</p><span class="pill locked">Premium · In development</span></article>
+<article class="tool"><h3>Project Management</h3><p>Organize multiple projects and track progress.</p><span class="pill locked">Premium · In development</span></article>
+</div><p class="note">Engineering outputs are informational and must be independently checked by a qualified engineer before construction or design decisions.</p></section>
+</div>
+</main>
+<script>
+const API="https://civil-ai-backend.sahilhabib9000.workers.dev";
+async function api(path,body){const r=await fetch(API+path,{method:body===undefined?"GET":"POST",credentials:"include",headers:body===undefined?{}:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||"Request failed.");return d}
+function showError(message){const box=document.getElementById("error");box.textContent=message;box.style.display="block"}
+(async()=>{try{const data=await api("/api/auth/me");if(!data.user){window.location.replace("account.html");return}if(!data.user.email_verified){window.location.replace("account.html");return}
+document.getElementById("email").textContent=data.user.email;
+document.getElementById("accountId").textContent=data.user.id;
+document.getElementById("verification").textContent="Verified";
+const premium=Boolean(data.premium_access);
+document.getElementById("plan").textContent=premium?"Premium Account":"Free Account";
+document.getElementById("plan").classList.toggle("free",!premium);
+document.getElementById("premium").textContent=premium?"Active":"Not active";
+document.getElementById("premium").style.color=premium?"#8af0c8":"#cbd5e1";
+document.getElementById("dashboardContent").hidden=false;
+}catch(error){showError(error.message+" Please refresh the page or sign in again.")}})();
+document.getElementById("logout").addEventListener("click",async()=>{try{await api("/api/auth/logout",{});window.location.replace("account.html")}catch(error){showError(error.message)}});
+</script>
+</body>
+</html>
