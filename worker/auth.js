@@ -27,7 +27,7 @@ async function sendVerificationEmail(env, email, token) {
     console.error("CIVIL AI Resend request failed", {
       name: error instanceof Error ? error.name : "UnknownError"
     });
-    return false;
+    return { emailSent: false, providerStatus: null, providerError: { code: "request_failed", name: error instanceof Error ? error.name : "UnknownError" } };
   }
   let providerError = null;
   if (!result.ok) {
@@ -37,7 +37,7 @@ async function sendVerificationEmail(env, email, token) {
         name: typeof payload?.name === "string" ? payload.name.slice(0, 80) : null,
         statusCode: Number.isFinite(Number(payload?.statusCode)) ? Number(payload.statusCode) : null,
         message: typeof payload?.message === "string"
-          ? payload.message.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, "[redacted-email]").slice(0, 240)
+          ? payload.message.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted-email]").slice(0, 240)
           : null
       };
     } catch {
@@ -49,7 +49,11 @@ async function sendVerificationEmail(env, email, token) {
     ok: result.ok,
     ...(providerError ? { providerError } : {})
   });
-  return result.ok;
+  return {
+    emailSent: result.ok,
+    providerStatus: result.status,
+    providerError
+  };
 }
 
 async function issueVerification(db, env, userId, email) {
@@ -219,8 +223,8 @@ export async function handleAuthRequest(request, env, origin) {
       await env.DB.prepare(
         "INSERT INTO users (id, email, password_salt, password_hash, email_verified, status, created_at) VALUES (?, ?, ?, ?, 0, 'active', ?)"
       ).bind(userId, email, saltHex, passwordHash, now).run();
-      const emailSent = await issueVerification(env.DB, env, userId, email);
-      if (!emailSent) return response({ error: "Account created but verification email could not be sent. Use resend verification after service is restored." }, 503, origin);
+      const emailResult = await issueVerification(env.DB, env, userId, email);
+      if (!emailResult.emailSent) return response({ error: "Account created but verification email could not be sent. Use resend verification after service is restored." }, 503, origin);
       const token = await createSession(env.DB, userId);
       return response({
         user: { id: userId, email, email_verified: false },
@@ -282,11 +286,13 @@ export async function handleAuthRequest(request, env, origin) {
     if (!EMAIL_RE.test(email) || email.length > 254) return response({ error: "If the account exists and needs verification, an email will be sent." }, 200, origin);
     const user = await env.DB.prepare("SELECT id, email_verified FROM users WHERE email = ? AND status = 'active' LIMIT 1").bind(email).first();
     if (user && Number(user.email_verified) !== 1 && env?.RESEND_API_KEY && env?.EMAIL_FROM) {
-      const emailSent = await issueVerification(env.DB, env, user.id, email);
+      const emailResult = await issueVerification(env.DB, env, user.id, email);
       console.log("CIVIL AI verification resend result", {
         userFound: true,
         emailVerified: false,
-        emailSent
+        emailSent: emailResult.emailSent,
+        providerStatus: emailResult.providerStatus,
+        ...(emailResult.providerError ? { providerError: emailResult.providerError } : {})
       });
     } else {
       console.log("CIVIL AI verification resend skipped", {
