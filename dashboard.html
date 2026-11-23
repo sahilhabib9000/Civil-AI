@@ -61,7 +61,7 @@ h1{font-size:clamp(30px,5vw,42px);margin:9px 0}h2{font-size:20px;margin:0 0 16px
 </div>
 </main>
 <script>
-const API="https://civil-ai-backend.sahilhabib9000.workers.dev";
+const API="";
 async function api(path,body){const r=await fetch(API+path,{method:body===undefined?"GET":"POST",credentials:"include",headers:body===undefined?{}:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||"Request failed.");return d}
 function showError(message){const box=document.getElementById("error");box.textContent=message;box.style.display="block"}
 (async()=>{try{const data=await api("/api/auth/me");if(!data.user){window.location.replace("account.html");return}if(!data.user.email_verified){window.location.replace("account.html");return}
