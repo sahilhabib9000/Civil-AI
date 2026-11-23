@@ -100,6 +100,43 @@ export default {
       }
     }
 
+    if (url.pathname === "/api/admin/customers") {
+      if (request.method !== "GET") {
+        return jsonResponse({ error: "Method not allowed." }, 405, origin);
+      }
+      const allowedAdmins = String(env?.ADMIN_EMAILS || "")
+        .split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
+      const admin = await getSessionUser(request, env);
+      if (!admin || Number(admin.email_verified) !== 1 ||
+          !allowedAdmins.includes(String(admin.email || "").toLowerCase())) {
+        return jsonResponse({ error: "Admin access denied." }, 403, origin);
+      }
+      const search = (url.searchParams.get("search") || "").trim().slice(0, 120);
+      const now = Math.floor(Date.now() / 1000);
+      try {
+        const result = await env.DB.prepare(
+          "SELECT u.id, u.email, u.email_verified, u.status, u.created_at, CASE WHEN EXISTS (SELECT 1 FROM premium_entitlements p WHERE p.user_id = u.id AND p.status = 'active' AND p.starts_at <= ? AND (p.expires_at IS NULL OR p.expires_at > ?)) THEN 1 ELSE 0 END AS premium_active FROM users u WHERE (? = '' OR instr(lower(u.email), lower(?)) > 0) ORDER BY u.created_at DESC LIMIT 100"
+        ).bind(now, now, search, search).all();
+        return jsonResponse({
+          customers: (result?.results || []).map(user => ({
+            id: user.id,
+            email: user.email,
+            email_verified: Number(user.email_verified) === 1,
+            status: user.status,
+            premium_active: Number(user.premium_active) === 1,
+            created_at: user.created_at
+          })),
+          limit: 100,
+          search
+        }, 200, origin);
+      } catch (error) {
+        console.error("CIVIL AI admin customers failed:", {
+          name: error instanceof Error ? error.name : "UnknownError"
+        });
+        return jsonResponse({ error: "Could not load customer records." }, 500, origin);
+      }
+    }
+
     if (url.pathname === "/api/health" && request.method === "GET") {
       return jsonResponse({
         service: "CIVIL AI Backend",
