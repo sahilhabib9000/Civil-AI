@@ -2,7 +2,7 @@
  * CIVIL AI backend.
  * AI answers are informational only; never a substitute for engineering review.
  */
-import { handleAuthRequest } from "./auth.js";
+import { handleAuthRequest, getSessionUser } from "./auth.js";
 
 const ALLOWED_ORIGIN = "https://civil-ai.pages.dev";
 const AI_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -54,6 +54,50 @@ export default {
 
     if (url.pathname.startsWith("/api/auth/")) {
       return await handleAuthRequest(request, env, origin);
+    }
+
+    if (url.pathname === "/api/admin/overview") {
+      if (request.method !== "GET") {
+        return jsonResponse({ error: "Method not allowed." }, 405, origin);
+      }
+      const allowedAdmins = String(env?.ADMIN_EMAILS || "")
+        .split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
+      if (!allowedAdmins.length) {
+        return jsonResponse({ error: "Admin access is not configured." }, 503, origin);
+      }
+      const admin = await getSessionUser(request, env);
+      if (!admin || Number(admin.email_verified) !== 1 ||
+          !allowedAdmins.includes(String(admin.email || "").toLowerCase())) {
+        return jsonResponse({ error: "Admin access denied." }, 403, origin);
+      }
+      try {
+        const [totals, verified, premium, recent] = await Promise.all([
+          env.DB.prepare("SELECT COUNT(*) AS total FROM users WHERE status = 'active'").first(),
+          env.DB.prepare("SELECT COUNT(*) AS total FROM users WHERE status = 'active' AND email_verified = 1").first(),
+          env.DB.prepare("SELECT COUNT(DISTINCT user_id) AS total FROM premium_entitlements WHERE status = 'active' AND starts_at <= ? AND (expires_at IS NULL OR expires_at > ?)").bind(Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000)).first(),
+          env.DB.prepare("SELECT id, email, email_verified, status, created_at FROM users ORDER BY created_at DESC LIMIT 50").all()
+        ]);
+        return jsonResponse({
+          admin: { email: admin.email },
+          stats: {
+            total_customers: Number(totals?.total || 0),
+            verified_customers: Number(verified?.total || 0),
+            active_premium_customers: Number(premium?.total || 0)
+          },
+          customers: (recent?.results || []).map(user => ({
+            id: user.id,
+            email: user.email,
+            email_verified: Number(user.email_verified) === 1,
+            status: user.status,
+            created_at: user.created_at
+          }))
+        }, 200, origin);
+      } catch (error) {
+        console.error("CIVIL AI admin overview failed:", {
+          name: error instanceof Error ? error.name : "UnknownError"
+        });
+        return jsonResponse({ error: "Could not load admin data." }, 500, origin);
+      }
     }
 
     if (url.pathname === "/api/health" && request.method === "GET") {
