@@ -2,7 +2,7 @@
  * CIVIL AI backend.
  * AI answers are informational only; never a substitute for engineering review.
  */
-import { handleAuthRequest, getSessionUser } from "./auth.js";
+import { handleAuthRequest, getSessionUser, requirePremium } from "./auth.js";
 
 const ALLOWED_ORIGIN = "https://civil-ai.pages.dev";
 const AI_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -54,6 +54,35 @@ export default {
 
     if (url.pathname.startsWith("/api/auth/")) {
       return await handleAuthRequest(request, env, origin);
+    }
+
+    // All Premium APIs are fail-closed behind the same server-side entitlement guard.
+    // Add feature handlers below this gate; never rely on frontend-only locks.
+    if (url.pathname === "/api/premium" || url.pathname.startsWith("/api/premium/")) {
+      let premium;
+      try {
+        premium = await requirePremium(request, env);
+      } catch (error) {
+        console.error("CIVIL AI Premium authorization lookup failed:", {
+          name: error instanceof Error ? error.name : "UnknownError"
+        });
+        return jsonResponse({ error: "Premium authorization is temporarily unavailable." }, 503, origin);
+      }
+      if (!premium.allowed) {
+        const status = premium.status === 401 ? 401 : premium.status === 403 ? 403 : 503;
+        return jsonResponse({
+          error: status === 401 ? "Verified sign-in is required." :
+            status === 403 ? "An active Premium entitlement is required." :
+            "Premium authorization is not configured."
+        }, status, origin);
+      }
+      if (url.pathname === "/api/premium/access" && request.method === "GET") {
+        return jsonResponse({
+          premium_access: true,
+          user: { id: premium.user.id, email: premium.user.email }
+        }, 200, origin);
+      }
+      return jsonResponse({ error: "Premium API route is protected but not implemented yet." }, 501, origin);
     }
 
     if (url.pathname === "/api/admin/overview") {
