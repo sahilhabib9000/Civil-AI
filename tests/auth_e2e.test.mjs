@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { handleAuthRequest, requirePremium } from "../worker/auth.js";
+import worker from "../worker/index.js";
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
@@ -193,6 +194,33 @@ DB.entitlements[0].expires_at = now-1;
 const expiredPremium = await requirePremium(new Request(base+"/api/premium",{headers:{Cookie:loginCookie}}),env);
 assert.equal(expiredPremium.allowed,false);
 assert.equal(expiredPremium.status,403);
+
+async function premiumRoute(cookie) {
+  const headers = new Headers({ Origin: origin });
+  if (cookie) headers.set("Cookie", cookie);
+  return worker.fetch(new Request(base + "/api/premium/access", { headers }), env);
+}
+const noSessionRoute = await premiumRoute("");
+assert.equal(noSessionRoute.status,401,"Premium API denies requests without a session");
+const freeUserRoute = await premiumRoute(loginCookie);
+assert.equal(freeUserRoute.status,403,"Premium API denies verified users without an entitlement");
+DB.entitlements[0].expires_at = now + 3600;
+const activeUserRoute = await premiumRoute(loginCookie);
+assert.equal(activeUserRoute.status,200,"Premium API allows an active entitlement");
+assert.equal((await activeUserRoute.json()).premium_access,true);
+DB.entitlements[0].expires_at = now - 1;
+const expiredUserRoute = await premiumRoute(loginCookie);
+assert.equal(expiredUserRoute.status,403,"Premium API denies expired entitlements");
+DB.entitlements[0].expires_at = now + 3600;
+user.email_verified = 0;
+const unverifiedUserRoute = await premiumRoute(loginCookie);
+assert.equal(unverifiedUserRoute.status,401,"Premium API denies unverified email even with an entitlement");
+user.email_verified = 1;
+const protectedFutureRoute = await worker.fetch(new Request(base + "/api/premium/boq/generate", {
+  method: "POST", headers: { Origin: origin, Cookie: loginCookie, "Content-Type": "application/json" }, body: "{}"
+}), env);
+assert.equal(protectedFutureRoute.status,501,"unknown Premium feature routes remain behind the authorization gate");
+assert.match(await protectedFutureRoute.text(),/protected but not implemented/i);
 
 const tampered = await call("/api/auth/me",{cookie:cookieName+"=tampered-token"});
 assert.equal((await tampered.json()).user,null);
